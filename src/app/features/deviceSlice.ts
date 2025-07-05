@@ -18,7 +18,7 @@ const initialState: DeviceState = {
 };
 
 const deviceSlice = createSlice({
-  name: "devce",
+  name: "device",
   initialState,
   reducers: {
     setDeviceType: (state, action) => {
