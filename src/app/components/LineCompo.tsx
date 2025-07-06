@@ -10,19 +10,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { LineItem } from "../model/LineItem";
+import type { FormChangeItem } from "../model/FormChangeItem";
 
 type Props = {
   items: LineItem[];
   onChange?: (item: LineItem) => void;
+  formChange: (obj: FormChangeItem) => void;
 };
 
-const LineCompo = ({ items, onChange }: Props) => {
-  const handleCheck = (id: string, checked: boolean) => {
-    const updated = items.map((item) =>
-      item.id === id ? { ...item, completed: checked } : item
-    );
-    onChange?.(updated.find((i) => i.id === id)!);
-  };
+const LineCompo = ({ items, onChange, formChange }: Props) => {
+  // const handleCheck = (id: string, checked: boolean) => {
+  //   const updated = items.map((item) =>
+  //     item.id === id ? { ...item, completed: checked } : item
+  //   );
+  //   onChange?.(updated.find((i) => i.id === id)!);
+  // };
 
   const handleRemarks = (id: string, text: string) => {
     const updated = items.map((item) =>
@@ -33,8 +35,8 @@ const LineCompo = ({ items, onChange }: Props) => {
   return (
     <div className="px-1 overflow-x-auto border rounded-md">
       <Table>
-        <TableHeader   className=" text-center">
-          <TableRow >
+        <TableHeader className=" text-center">
+          <TableRow>
             <TableHead className=" text-center">LINE ITEM</TableHead>
             <TableHead className=" text-center">PLANNED QTY</TableHead>
             <TableHead className=" text-center">STATUS</TableHead>
@@ -44,11 +46,13 @@ const LineCompo = ({ items, onChange }: Props) => {
         </TableHeader>
 
         <TableBody>
-          {items.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell className="text-center font-medium">{item.title}</TableCell>
+          {items.map((item, index) => (
+            <TableRow key={index}>
+              <TableCell className="text-center font-medium">
+                {item.name}
+              </TableCell>
               <TableCell className=" text-center">
-                {item.quantity} {item.unit}
+                {item.plannedQuantity.value} {item.plannedQuantity.unit}
               </TableCell>
               <TableCell>
                 <Badge variant="secondary" className="rounded-full px-3">
@@ -57,14 +61,24 @@ const LineCompo = ({ items, onChange }: Props) => {
               </TableCell>
               <TableCell className="text-center">
                 <Checkbox
-                  checked={item.completed}
-                  onCheckedChange={(val) => handleCheck(item.id, Boolean(val))}
+                  checked={item.isCompleted}
+                  onClick={(e) => e.stopPropagation()}
+                  // onCheckedChange={(val) => handleCheck(item.id, Boolean(val))}
+                  onCheckedChange={(val) => {
+                    item.isCompleted = !!val;
+                    let changeObj: FormChangeItem = {
+                      area: "LINE",
+                      isCheckChange: true,
+                      lineIndex: index,
+                    };
+                    formChange(changeObj);
+                  }}
                   className="border-primary data-[state=checked]:bg-primary data-[state=checked]:text-white"
                 />
               </TableCell>
               <TableCell className=" text-center">
                 <Input
-                className="w-auto"
+                  className="w-auto"
                   value={item.remarks}
                   onChange={(e) => handleRemarks(item.id, e.target.value)}
                   placeholder="Enter remarks"

@@ -4,11 +4,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { useDeviceListener } from "./app/hooks/useDeviceListener";
 import type { AppDispatch, RootState } from "./app/store";
 import TabCompo from "./app/components/TabCompo";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, CardTitle } from "./components/ui/card";
 import FilterCompo from "./app/components/FilterCompo";
 import DashboardCompo from "./app/components/DashboardCompo";
 import type { DashBoardItem } from "./app/model/DashBoardItem";
+import type { FormChangeItem } from "./app/model/FormChangeItem";
 
 function App() {
   // sets devicetype according to screen width
@@ -39,7 +40,7 @@ function App() {
         status: "IN_PROGRESS",
       },
       workOrder: {
-        id: "WO-003",
+        id: "WO-002",
         title: "Interior Finishing",
         description: "Complete interior finishing work for residential units",
         startDate: "2024-06-01",
@@ -52,8 +53,8 @@ function App() {
         },
       },
       progressSummary: {
-        overallProgress: 58,
-        lastUpdated: "2025-07-06T15:12:33.456+05:30",
+        overallProgress: 34,
+        lastUpdated: "2025-01-03T14:45:00Z",
         totalLineItems: 18,
         completedLineItems: 6,
         pendingLineItems: 10,
@@ -68,19 +69,22 @@ function App() {
               id: "floor1",
               name: "Floor 1",
               progress: 25,
-              isCompleted: true,
+              isCompleted: false,
+              collapse: true,
               flats: [
                 {
                   id: "flat101",
                   name: "Flat 101",
                   progress: 50,
                   isCompleted: false,
+                  collapse: false,
                   areas: [
                     {
                       id: "commontoilet101",
                       name: "Common Toilet",
                       progress: 50,
                       isCompleted: false,
+                      collapse: false,
                       lineItems: [
                         {
                           id: "li_001",
@@ -106,6 +110,7 @@ function App() {
                           },
                           status: "PENDING",
                           isCompleted: false,
+                          collapse: false,
                           remarks: "",
                           estimatedStartDate: "2025-01-05T09:00:00Z",
                           assignedTo: "Plumbing Team B",
@@ -117,6 +122,7 @@ function App() {
                       name: "Master Toilet",
                       progress: 50,
                       isCompleted: false,
+                      collapse: false,
                       lineItems: [
                         {
                           id: "li_003",
@@ -142,6 +148,7 @@ function App() {
                           },
                           status: "PENDING",
                           isCompleted: false,
+                          collapse: false,
                           remarks: "",
                           estimatedStartDate: "2025-01-08T09:00:00Z",
                           assignedTo: "Electrical Team C",
@@ -155,12 +162,14 @@ function App() {
                   name: "Flat 102",
                   progress: 0,
                   isCompleted: false,
+                  collapse: false,
                   areas: [
                     {
                       id: "kitchen102",
                       name: "Kitchen",
                       progress: 0,
                       isCompleted: false,
+                      collapse: false,
                       lineItems: [
                         {
                           id: "li_005",
@@ -172,6 +181,7 @@ function App() {
                           },
                           status: "PENDING",
                           isCompleted: false,
+                          collapse: false,
                           remarks: "",
                           estimatedStartDate: "2025-01-10T09:00:00Z",
                           assignedTo: "Carpentry Team A",
@@ -186,6 +196,7 @@ function App() {
                           },
                           status: "PENDING",
                           isCompleted: false,
+                          collapse: false,
                           remarks: "",
                           estimatedStartDate: "2025-01-15T09:00:00Z",
                           assignedTo: "Stone Team B",
@@ -201,18 +212,21 @@ function App() {
               name: "Floor 2",
               progress: 0,
               isCompleted: false,
+              collapse: false,
               flats: [
                 {
                   id: "flat201",
                   name: "Flat 201",
                   progress: 0,
                   isCompleted: false,
+                  collapse: false,
                   areas: [
                     {
                       id: "livingroom201",
                       name: "Living Room",
                       progress: 0,
                       isCompleted: false,
+                      collapse: false,
                       lineItems: [
                         {
                           id: "li_007",
@@ -224,6 +238,7 @@ function App() {
                           },
                           status: "PENDING",
                           isCompleted: false,
+                          collapse: false,
                           remarks: "",
                           estimatedStartDate: "2025-01-20T09:00:00Z",
                           assignedTo: "Painting Team A",
@@ -238,6 +253,7 @@ function App() {
                           },
                           status: "PENDING",
                           isCompleted: false,
+                          collapse: false,
                           remarks: "",
                           estimatedStartDate: "2025-01-25T09:00:00Z",
                           assignedTo: "Flooring Team B",
@@ -266,7 +282,7 @@ function App() {
     setDbRecord(dbObj);
     mainRecord.current = initialValue;
     console.log(initialValue.areas.typical);
-    
+
     setTabRecord({ ...initialValue.areas.typical });
   };
 
@@ -286,13 +302,21 @@ function App() {
     return newFormat;
   };
 
-  const formChange = (
-    val: string,
-    area: "FLOOR" | "FLAT" | "AREA",
-    floorIndex: number,
-    flateIndex: number,
-    areaIndex: number
-  ) => {};
+  // val: string|boolean|number,
+  // area: "FLOOR" | "FLAT" | "AREA",
+  // isCheckChange: boolean,
+  // isCollapseChange: boolean,
+  // floorIndex?: number,
+  // flateIndex?: number,
+  // areaIndex?: number
+
+  const formChange = useCallback((obj: FormChangeItem) => {
+    let updatedRecord  = structuredClone(tabRecord);;
+    if (obj.isCheckChange) {
+    }
+
+    setTabRecord(updatedRecord );
+  }, [tabRecord]);
 
   useEffect(() => {
     getInitial();
@@ -300,7 +324,9 @@ function App() {
 
   // const deviceType = useSelector((state: RootState) => state.device.type); // can be Mobile , Tablet or Desktop
 
-  {console.log(tabRecord)}
+  {
+    console.log(tabRecord);
+  }
   return (
     <div className="flex flex-col w-screen bg-muted">
       <div className="flex justify-center align-middle">
@@ -312,7 +338,7 @@ function App() {
         </div>
         <div className="w-full md:w-[70%] md:h-full flex flex-col items-center justify-center p-4">
           {/* <h1>You're using: {deviceType}</h1> */}
-          <TabCompo tabRecod={tabRecord} />
+          <TabCompo formChange={formChange} tabRecod={tabRecord} />
         </div>
       </div>
     </div>

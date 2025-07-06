@@ -14,12 +14,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AccordionCompo from "./AccordionCompo";
 import AreaAccordionCompo from "./AreaAccordionCompo";
 import { useEffect } from "react";
+import type { FormChangeItem } from "../model/FormChangeItem";
 
 type Props = {
   tabRecod: any;
+  formChange: (obj: FormChangeItem) => void;
 };
 
-const TabCompo = ({ tabRecod }: Props) => {
+const TabCompo = ({ tabRecod, formChange }: Props) => {
   // useEffect(() => {
   //   console.log(JSON.stringify(tabRecod));
   // }, [tabRecod]);
@@ -38,7 +40,10 @@ const TabCompo = ({ tabRecod }: Props) => {
           </TabsList>
         </div>
         <TabsContent value="typical_areas">
-          <AccordionCompo floorList={tabRecod?.floors} />
+          <AccordionCompo
+            formChange={formChange}
+            floorList={tabRecod?.floors}
+          />
           {/* <AccordionCompo
             id="rooftop"
             label="Mark Rooftop Complete"
@@ -49,24 +54,24 @@ const TabCompo = ({ tabRecod }: Props) => {
           /> */}
         </TabsContent>
         <TabsContent value="with_qty">
-          <AreaAccordionCompo
+          {/* <AreaAccordionCompo
             id="rooftop"
             label="Mark Rooftop Complete"
             title="Rooftop - General Area"
             progress={75}
             checked={false}
             onCheckChange={(val) => console.log("Checked:", val)}
-          />
+          /> */}
         </TabsContent>
         <TabsContent value="without_qty">
-          <AreaAccordionCompo
+          {/* <AreaAccordionCompo
             id="rooftop"
             label="Mark Rooftop Complete"
             title="Rooftop - General Area"
             progress={75}
             checked={false}
             onCheckChange={(val) => console.log("Checked:", val)}
-          />
+          /> */}
         </TabsContent>
       </Tabs>
     </div>

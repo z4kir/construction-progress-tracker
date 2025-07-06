@@ -1,9 +1,12 @@
 export type LineItem = {
   id: string;
-  title: string;
-  quantity: number;
+  name: string;
+  category: string;
+  plannedQuantity: { value: number; unit: string };
   unit: string;
-  status: "PENDING" | "IN PROGRESS" | "DONE";
-  completed: boolean;
+  status: string;
+  isCompleted: boolean;
   remarks: string;
+  completedDate: string;
+  assignedTo: string;
 };

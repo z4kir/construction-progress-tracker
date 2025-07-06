@@ -24,7 +24,7 @@ type AreaItem = {
   progress: number;
   isCompleted: boolean;
   collapse: boolean;
-  line: LineItem[];
+  lineItems: LineItem[];
 };
 
 export type { FloorItem, FlatItem, AreaItem };
