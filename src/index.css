@@ -118,3 +118,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* === Custom Scrollbar for Mobile: Always Visible When Scrollable === */
+.mobile-scrollbar {
+  scrollbar-gutter: stable; /* Reserve space for scrollbar */
+  -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+}
+
+/* Style for WebKit-based browsers (Chrome, Safari, Edge) */
+.mobile-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.mobile-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 100, 100, 0.4);
+  border-radius: 4px;
+}

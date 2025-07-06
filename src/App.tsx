@@ -1,16 +1,29 @@
 // import './App.css'
 
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useDeviceListener } from "./app/hooks/useDeviceListener";
-import type { RootState } from "./app/store";
+import type { AppDispatch, RootState } from "./app/store";
 import TabCompo from "./app/components/TabCompo";
 import { useEffect, useRef, useState } from "react";
+import { Card, CardTitle } from "./components/ui/card";
+import FilterCompo from "./app/components/FilterCompo";
+import DashboardCompo from "./app/components/DashboardCompo";
+import type { DashBoardItem } from "./app/model/DashBoardItem";
 
 function App() {
   // sets devicetype according to screen width
   useDeviceListener();
 
-  const [tabRecord, setTabRecord] = useState({});
+  // redux dispatch
+  let dispatch = useDispatch<AppDispatch>();
+
+  const [tabRecord, setTabRecord] = useState<any>({});
+  const [dbRecord, setDbRecord] = useState<DashBoardItem>({
+    lastUpdated: "",
+    overallProgress: 0,
+    projectName: "",
+    workOrder: "",
+  }); // dashboard record as
 
   const mainRecord = useRef({});
 
@@ -26,7 +39,7 @@ function App() {
         status: "IN_PROGRESS",
       },
       workOrder: {
-        id: "WO-002",
+        id: "WO-003",
         title: "Interior Finishing",
         description: "Complete interior finishing work for residential units",
         startDate: "2024-06-01",
@@ -39,8 +52,8 @@ function App() {
         },
       },
       progressSummary: {
-        overallProgress: 34,
-        lastUpdated: "2025-01-03T14:45:00Z",
+        overallProgress: 58,
+        lastUpdated: "2025-07-06T15:12:33.456+05:30",
         totalLineItems: 18,
         completedLineItems: 6,
         pendingLineItems: 10,
@@ -55,7 +68,7 @@ function App() {
               id: "floor1",
               name: "Floor 1",
               progress: 25,
-              isCompleted: false,
+              isCompleted: true,
               flats: [
                 {
                   id: "flat101",
@@ -239,8 +252,38 @@ function App() {
         },
       },
     };
+    let workOrder: string =
+      initialValue.workOrder.id + "-" + initialValue.workOrder.title;
+    let formattedDate = formatDateTime(
+      initialValue.progressSummary.lastUpdated
+    );
+    let dbObj: DashBoardItem = {
+      projectName: initialValue.project.name,
+      workOrder: workOrder,
+      overallProgress: initialValue.progressSummary.overallProgress,
+      lastUpdated: formattedDate,
+    };
+    setDbRecord(dbObj);
     mainRecord.current = initialValue;
+    console.log(initialValue.areas.typical);
+    
     setTabRecord({ ...initialValue.areas.typical });
+  };
+
+  const formatDateTime = (input: string): string => {
+    const date = new Date(input);
+
+    const options: Intl.DateTimeFormatOptions = {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    };
+
+    let newFormat: string = date.toLocaleString("en-US", options);
+    console.log(newFormat);
+    return newFormat;
   };
 
   const formChange = (
@@ -255,12 +298,23 @@ function App() {
     getInitial();
   }, []);
 
-  const deviceType = useSelector((state: RootState) => state.device.type); // can be Mobile , Tablet or Desktop
+  // const deviceType = useSelector((state: RootState) => state.device.type); // can be Mobile , Tablet or Desktop
 
+  {console.log(tabRecord)}
   return (
-    <div className="flex  align-middle min-h-screen min-w-screen flex-col   items-center justify-center">
-      <h1>You're using: {deviceType}</h1>
-      <TabCompo />
+    <div className="flex flex-col w-screen bg-muted">
+      <div className="flex justify-center align-middle">
+        <DashboardCompo dashboradItem={dbRecord} />
+      </div>
+      <div className="flex flex-col md:flex-row min-h-screen">
+        <div className=" w-full  md:w-[30%]   flex  justify-center ">
+          <FilterCompo />
+        </div>
+        <div className="w-full md:w-[70%] md:h-full flex flex-col items-center justify-center p-4">
+          {/* <h1>You're using: {deviceType}</h1> */}
+          <TabCompo tabRecod={tabRecord} />
+        </div>
+      </div>
     </div>
   );
 }

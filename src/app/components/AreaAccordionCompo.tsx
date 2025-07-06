@@ -47,7 +47,7 @@ const AreaAccordionCompo = ({
   ];
   return (
     <div>
-      <Accordion type="single" collapsible>
+      <Accordion className="my-2" type="single" collapsible>
         <AccordionItem
           value={id}
             className="border rounded-md bg-gray-50  shadow-sm"
