@@ -1,11 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
-import counterReducer from "./features/counterSlice";
 import deviceReducer from "./features/deviceSlice";
+import tabReducer from "./features/tabSlice";
 
 export const store = configureStore({
   reducer: {
-    counter: counterReducer,
     device: deviceReducer,
+    tab:tabReducer,
   },
 });
 

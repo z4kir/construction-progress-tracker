@@ -42,17 +42,22 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
             value={floor.id}
             className="border rounded-md bg-gray-50  shadow-sm"
           >
-            <AccordionTrigger className="border  bg-gray-50 px-4 py-4 shadow-sm transition-shadow hover:shadow-md hover:bg-muted hover:no-underline  rounded-md">
+            <AccordionTrigger className="border  bg-gray-50 px-4 py-4 shadow-sm transition-shadow hover:cursor-pointer hover:shadow-md hover:bg-muted hover:no-underline  rounded-md">
               <div className="flex justify-between items-start w-full">
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id={`checkbox-${floor.id}`}
+                      className="border-primary hover:border-[1.5px] hover:cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-white "
                       checked={floor.isCompleted}
-                      onClick={(e) => {e.stopPropagation()}}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
                       onCheckedChange={(val) => {
-                        floor.isCompleted = !!val;
+                        let newVal: boolean = !!val;
+                        floor.isCompleted = newVal;
                         let changeObj: FormChangeItem = {
+                          value: newVal,
                           area: "FLOOR",
                           isCheckChange: true,
                           floorIndex: floorIndex,
@@ -61,8 +66,8 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
                       }}
                     />
                     <label
-                      htmlFor={`checkbox-${floor.id}`}
-                      className="text-sm font-medium"
+                      // htmlFor={`checkbox-${floor.id}`}
+                      className="text-sm font-medium hover:cursor-pointer"
                     >
                       Mark {floor.name} Completed
                     </label>
@@ -80,7 +85,7 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
               </div>
             </AccordionTrigger>
 
-            <AccordionContent className="mt-4 px-2 text-sm text-muted-foreground overflow-auto">
+            <AccordionContent className="mt-4 px-2 text-sm  overflow-auto">
               {/* Expandable content here if needed */}
               <div>
                 {floor?.flats?.map((flat, flatIndex) => (
@@ -107,27 +112,31 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
                       value={flat.id}
                       className="border rounded-md bg-gray-50 shadow-sm"
                     >
-                      <AccordionTrigger className="border  bg-gray-50 px-4 py-4 shadow-sm transition-shadow hover:shadow-md hover:bg-muted hover:no-underline  rounded-md">
+                      <AccordionTrigger className="border  bg-gray-50 px-4 py-4 shadow-sm transition-shadow hover:cursor-pointer hover:shadow-md hover:bg-muted hover:no-underline  rounded-md">
                         <div className="flex justify-between items-start w-full">
                           <div className="flex flex-col gap-2">
                             <div className="flex items-center gap-2">
                               <Checkbox
                                 id={`checkbox-${flat.id}`}
+                                className="border-primary hover:border-[1.5px] hover:cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-white "
                                 checked={flat.isCompleted}
                                 onClick={(e) => e.stopPropagation()}
                                 onCheckedChange={(val) => {
-                                  flat.isCompleted = !!val;
+                                  let newVal: boolean = !!val;
+                                  flat.isCompleted = newVal;
                                   let changeObj: FormChangeItem = {
-                                    area: "FLOOR",
+                                    value: newVal,
+                                    area: "FLAT",
                                     isCheckChange: true,
+                                    floorIndex: floorIndex,
                                     flateIndex: flatIndex,
                                   };
                                   formChange(changeObj);
                                 }}
                               />
                               <label
-                                htmlFor={`checkbox-${flat.id}`}
-                                className="text-sm font-medium"
+                                // htmlFor={`checkbox-${flat.id}`}
+                                className="text-sm font-medium hover:cursor-pointer"
                               >
                                 Mark {flat.name} Completed
                               </label>
@@ -148,13 +157,15 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
                           {/* Icon (optional) on right */}
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="mt-4 px-2 text-sm text-muted-foreground overflow-auto">
+                      <AccordionContent className="mt-4 px-2 text-sm  overflow-auto">
                         {/* Expandable content here if needed */}
 
                         <AreaAccordionCompo
                           formChange={formChange}
                           areas={flat.areas}
-                          onCheckChange={(val) => console.log("Checked:", val)}
+                          floorIndex={floorIndex}
+                          flatIndex={flatIndex}
+                          // onCheckChange={(val) => console.log("Checked:", val)}
                         />
                       </AccordionContent>
                     </AccordionItem>

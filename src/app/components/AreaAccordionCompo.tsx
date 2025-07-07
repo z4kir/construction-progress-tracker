@@ -22,33 +22,32 @@ import type { FormChangeItem } from "../model/FormChangeItem";
 type Props = {
   areas: AreaItem[];
   formChange: (obj: FormChangeItem) => void;
-  onCheckChange?: (checked: boolean) => void;
+  // onCheckChange?: (checked: boolean) => void;
+  floorIndex?: number;
+  flatIndex?: number;
 };
 
-const AreaAccordionCompo = ({ areas, formChange }: Props) => {
-  // const lineItems: LineItem[] = [
-  //   {
-  //     id: "1",
-  //     title: "Concrete Flooring",
-  //     quantity: 1200,
-  //     unit: "sqft",
-  //     status: "DONE",
-  //     completed: true,
-  //     remarks: "Curing complete",
-  //   },
-  //   {
-  //     id: "2",
-  //     title: "Waterproofing",
-  //     quantity: 1200,
-  //     unit: "sqft",
-  //     status: "DONE",
-  //     completed: true,
-  //     remarks: "",
-  //   },
-  // ];
+const AreaAccordionCompo = ({
+  areas,
+  formChange,
+  flatIndex,
+  floorIndex,
+}: Props) => {
+  const areaChangeFn = (newVal: boolean, areaIndex: number) => {
+    let changeObj: FormChangeItem = {
+      value: newVal,
+      area: "AREA",
+      isCheckChange: true,
+      floorIndex: floorIndex,
+      flateIndex: flatIndex,
+      areaIndex: areaIndex,
+    };
+    formChange(changeObj);
+  };
+
   return (
     <div>
-      {areas.map((area, areaIndex) => (
+      {areas?.map((area, areaIndex) => (
         <Accordion
           key={areaIndex}
           className="my-2"
@@ -70,29 +69,35 @@ const AreaAccordionCompo = ({ areas, formChange }: Props) => {
         >
           <AccordionItem
             value={area.id}
-            className="border rounded-md bg-gray-50  shadow-sm"
+            className="border rounded-md bg-gray-50   shadow-sm"
           >
-            <AccordionTrigger className="border  bg-gray-50 px-4 py-4 shadow-sm transition-shadow hover:shadow-md hover:bg-muted hover:no-underline  rounded-md">
+            <AccordionTrigger className="border  bg-gray-50 px-4 py-4 shadow-sm transition-shadow hover:cursor-pointer hover:shadow-md hover:bg-muted hover:no-underline  rounded-md">
               <div className="flex justify-between items-start w-full">
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id={`checkbox-${area.id}`}
+                      className="border-primary hover:border-[1.5px] hover:cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-white "
                       checked={area.isCompleted}
                       onClick={(e) => e.stopPropagation()}
                       onCheckedChange={(val) => {
-                        area.isCompleted = !!val;
-                        let changeObj: FormChangeItem = {
-                          area: "FLOOR",
-                          isCheckChange: true,
-                          areaIndex: areaIndex,
-                        };
-                        formChange(changeObj);
+                        let newVal: boolean = !!val;
+                        area.isCompleted = newVal;
+                        areaChangeFn(newVal, areaIndex);
+                        // let changeObj: FormChangeItem = {
+                        //   value: newVal,
+                        //   area: "FLOOR",
+                        //   isCheckChange: true,
+                        //   floorIndex: floorIndex,
+                        //   flateIndex: flatIndex,
+                        //   areaIndex: areaIndex,
+                        // };
+                        // formChange(changeObj);
                       }}
                     />
                     <label
-                      htmlFor={`checkbox-${area.id}`}
-                      className="text-sm font-medium"
+                      // htmlFor={`checkbox-${area.id}`}
+                      className="text-sm font-medium hover:cursor-pointer"
                     >
                       Mark {area.name} Completed
                     </label>
@@ -109,15 +114,15 @@ const AreaAccordionCompo = ({ areas, formChange }: Props) => {
                 {/* <AccordionTrigger className="w-auto px-2" /> */}
               </div>
             </AccordionTrigger>
-            <AccordionContent className="mt-4 text-sm text-muted-foreground overflow-auto">
+            <AccordionContent className="mt-4 text-sm bg-gray-50 overflow-auto">
               {/* Expandable content here if needed */}
               <div className="px-4">
                 <LineCompo
                   items={area.lineItems}
                   formChange={formChange}
-                  // onClick={(updatedItem) =>
-                  //   console.log("Changed:", updatedItem)
-                  // }
+                  floorIndex={floorIndex}
+                  flatIndex={flatIndex}
+                  areaIndex={areaIndex}
                 />
               </div>
             </AccordionContent>

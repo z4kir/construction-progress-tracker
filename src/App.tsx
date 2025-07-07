@@ -10,6 +10,11 @@ import FilterCompo from "./app/components/FilterCompo";
 import DashboardCompo from "./app/components/DashboardCompo";
 import type { DashBoardItem } from "./app/model/DashBoardItem";
 import type { FormChangeItem } from "./app/model/FormChangeItem";
+import type { AreaItem, FlatItem, FloorItem } from "./app/model/AccordionItem";
+import type { LineItem } from "./app/model/LineItem";
+import { Button } from "./components/ui/button";
+import { setTab } from "./app/features/tabSlice";
+import { toast, Toaster } from "sonner";
 
 function App() {
   // sets devicetype according to screen width
@@ -17,6 +22,7 @@ function App() {
 
   // redux dispatch
   let dispatch = useDispatch<AppDispatch>();
+  const currentTab = useSelector((state: RootState) => state.tab.currentTab);
 
   const [tabRecord, setTabRecord] = useState<any>({});
   const [dbRecord, setDbRecord] = useState<DashBoardItem>({
@@ -26,7 +32,9 @@ function App() {
     workOrder: "",
   }); // dashboard record as
 
-  const mainRecord = useRef({});
+  const mainRecord = useRef<any>({});
+  const initialMainRecord = useRef<any>({});
+  // const currentTab = useRef("typical");
 
   const getInitial = () => {
     // fetch Api to get initial value
@@ -53,36 +61,37 @@ function App() {
         },
       },
       progressSummary: {
-        overallProgress: 34,
+        overallProgress: 0,
         lastUpdated: "2025-01-03T14:45:00Z",
-        totalLineItems: 18,
-        completedLineItems: 6,
+        totalLineItems: 10,
+        completedLineItems: 0,
         pendingLineItems: 10,
-        inProgressLineItems: 2,
+        inProgressLineItems: 0,
       },
       areas: {
         typical: {
           name: "Typical Areas",
           description: "Standard residential unit areas",
+          progress: 0,
           floors: [
             {
               id: "floor1",
               name: "Floor 1",
-              progress: 25,
+              progress: 0,
               isCompleted: false,
               collapse: true,
               flats: [
                 {
                   id: "flat101",
                   name: "Flat 101",
-                  progress: 50,
+                  progress: 0,
                   isCompleted: false,
                   collapse: false,
                   areas: [
                     {
                       id: "commontoilet101",
                       name: "Common Toilet",
-                      progress: 50,
+                      progress: 0,
                       isCompleted: false,
                       collapse: false,
                       lineItems: [
@@ -94,9 +103,9 @@ function App() {
                             value: 25,
                             unit: "sqft",
                           },
-                          status: "COMPLETED",
-                          isCompleted: true,
-                          remarks: "Quality approved",
+                          status: "PENDING",
+                          isCompleted: false,
+                          remarks: "",
                           completedDate: "2025-01-02T10:30:00Z",
                           assignedTo: "Tile Team A",
                         },
@@ -120,7 +129,7 @@ function App() {
                     {
                       id: "mastertoilet101",
                       name: "Master Toilet",
-                      progress: 50,
+                      progress: 0,
                       isCompleted: false,
                       collapse: false,
                       lineItems: [
@@ -133,8 +142,8 @@ function App() {
                             unit: "sqft",
                           },
                           status: "IN_PROGRESS",
-                          isCompleted: true,
-                          remarks: "75% complete",
+                          isCompleted: false,
+                          remarks: "",
                           startedDate: "2024-12-30T08:00:00Z",
                           assignedTo: "Tile Team A",
                         },
@@ -266,6 +275,106 @@ function App() {
             },
           ],
         },
+        with_qty: {
+          name: "With Qty",
+          description: "Standard residential unit areas",
+          progress: 0,
+          areas: [
+            {
+              id: "kitchen102",
+              name: "Kitchen",
+              progress: 0,
+              isCompleted: false,
+              collapse: false,
+              lineItems: [
+                {
+                  id: "li_005",
+                  name: "Cabinet Installation",
+                  category: "cabinet",
+                  plannedQuantity: {
+                    value: 8,
+                    unit: "units",
+                  },
+                  status: "PENDING",
+                  isCompleted: false,
+                  collapse: false,
+                  remarks: "",
+                  estimatedStartDate: "2025-01-10T09:00:00Z",
+                  assignedTo: "Carpentry Team A",
+                },
+                {
+                  id: "li_006",
+                  name: "Countertop Installation",
+                  category: "countertop",
+                  plannedQuantity: {
+                    value: 12,
+                    unit: "sqft",
+                  },
+                  status: "PENDING",
+                  isCompleted: false,
+                  collapse: false,
+                  remarks: "",
+                  estimatedStartDate: "2025-01-15T09:00:00Z",
+                  assignedTo: "Stone Team B",
+                },
+              ],
+            },
+          ],
+        },
+        without_qty: {
+          name: "Without Qty",
+          description: "Standard residential unit areas",
+          progress: 0,
+          areas: [
+            {
+              id: "kitchen102",
+              name: "Kitchen",
+              progress: 0,
+              isCompleted: false,
+              collapse: false,
+              lineItems: [
+                {
+                  id: "li_005",
+                  name: "Cabinet Installation",
+                  category: "cabinet",
+                  plannedQuantity: {
+                    value: 8,
+                    unit: "units",
+                  },
+                  addQuantity: {
+                    value: 0,
+                    unit: "sqft",
+                  },
+                  status: "PENDING",
+                  isCompleted: false,
+                  collapse: false,
+                  remarks: "",
+                  estimatedStartDate: "2025-01-10T09:00:00Z",
+                  assignedTo: "Carpentry Team A",
+                },
+                {
+                  id: "li_006",
+                  name: "Countertop Installation",
+                  category: "countertop",
+                  plannedQuantity: {
+                    value: 12,
+                    unit: "sqft",
+                  },
+                  addQuantity: {
+                    value: 0,
+                    unit: "sqft",
+                  },
+                  status: "PENDING",
+                  isCompleted: false,
+                  collapse: false,
+                  remarks: "",
+                  estimatedStartDate: "2025-01-15T09:00:00Z",
+                  assignedTo: "Stone Team B",
+                },
+              ],
+            },
+          ],
+        },
       },
     };
     let workOrder: string =
@@ -280,9 +389,9 @@ function App() {
       lastUpdated: formattedDate,
     };
     setDbRecord(dbObj);
+    initialMainRecord.current = structuredClone(initialValue);
     mainRecord.current = initialValue;
-    console.log(initialValue.areas.typical);
-
+    dispatch(setTab("typical"));
     setTabRecord({ ...initialValue.areas.typical });
   };
 
@@ -298,8 +407,32 @@ function App() {
     };
 
     let newFormat: string = date.toLocaleString("en-US", options);
-    console.log(newFormat);
     return newFormat;
+  };
+
+  const tabChangeFn = (val: string) => {
+    switch (val) {
+      case "typical":
+        // updateAllProgress();
+        dispatch(setTab("typical"));
+        setTabRecord({ ...mainRecord.current.areas.typical });
+        break;
+      case "with_qty":
+        // updateAllProgress();
+        dispatch(setTab("with_qty"));
+        setTabRecord({ ...mainRecord.current.areas.with_qty });
+        break;
+      case "without_qty":
+        // updateAllProgress();
+        dispatch(setTab("without_qty"));
+        setTabRecord({ ...mainRecord.current.areas.without_qty });
+        break;
+
+      default:
+        dispatch(setTab("typical"));
+        setTabRecord({ ...mainRecord.current.areas.typical });
+        break;
+    }
   };
 
   // val: string|boolean|number,
@@ -310,25 +443,422 @@ function App() {
   // flateIndex?: number,
   // areaIndex?: number
 
-  const formChange = useCallback((obj: FormChangeItem) => {
-    let updatedRecord  = structuredClone(tabRecord);;
-    if (obj.isCheckChange) {
+  const formChange = useCallback(
+    (obj: FormChangeItem) => {
+      let updatedRecord = structuredClone(tabRecord);
+      let message: string = "";
+      if (obj.isCheckChange) {
+        setAllNestedCheck(obj, updatedRecord);
+        message += obj.area;
+        if (typeof obj.value === "boolean") {
+          if (obj.value) {
+            message += " Marked!";
+          } else {
+            message += " UnMarked!";
+          }
+          toast.info(message, { position: "top-right" });
+        }
+      }
+      // updateAllProgress();
+      updateMainRecord(updatedRecord);
+      setTabRecord(updatedRecord);
+    },
+    [tabRecord]
+  );
+
+  const updateMainRecord = (record: typeof tabRecord) => {
+    switch (currentTab) {
+      case "typical":
+        mainRecord.current.areas.typical = record;
+        break;
+      case "with_qty":
+        mainRecord.current.areas.with_qty = record;
+        break;
+      case "without_qty":
+        mainRecord.current.areas.without_qty = record;
+        break;
+
+      default:
+        break;
+    }
+  };
+
+  const setAllNestedCheck = (obj: FormChangeItem, record: typeof tabRecord) => {
+    const { floorIndex, flateIndex, areaIndex, lineIndex, area, value } = obj;
+    const newStatus = value ?? false;
+    console.log("floorIndex", floorIndex);
+
+    // Step 1: Line-based progress calculation helpers
+
+    const getLineStatsFromArea = (area: AreaItem) => {
+      let total = 0;
+      let completed = 0;
+
+      // areas.forEach((area: AreaItem) => {
+      if (area.lineItems.length > 0) {
+        area.lineItems.forEach((line: LineItem) => {
+          total++;
+          if (line.isCompleted) completed++;
+        });
+      } else {
+        total++;
+        if (area.isCompleted) completed++;
+      }
+      // });
+
+      return { total, completed };
+    };
+
+    const updateAreaProgress = (area: AreaItem) => {
+      const { total, completed } = getLineStatsFromArea(area);
+      area.progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+      area.isCompleted = area.progress === 100;
+      return { total, completed };
+    };
+
+    // const updateFlatProgress = (flat: FlatItem) => {
+
+    //   const { total, completed } = getLineStatsFromAreas(flat.areas);
+    //   flat.progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+    //   flat.isCompleted = flat.progress === 100;
+    // };
+
+    const updateFlatProgress = (flat: FlatItem) => {
+      let total = 0;
+      let completed = 0;
+      flat.areas.forEach((area: AreaItem) => {
+        const { total: ft, completed: fc } = updateAreaProgress(area);
+        total += ft;
+        completed += fc;
+      });
+      flat.progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+      flat.isCompleted = flat.progress === 100;
+      return { total, completed };
+    };
+
+    const updateFloorProgress = (floor: FloorItem) => {
+      let total = 0;
+      let completed = 0;
+
+      floor.flats.forEach((flat: FlatItem) => {
+        const { total: ft, completed: fc } = updateFlatProgress(flat);
+        total += ft;
+        completed += fc;
+      });
+
+      floor.progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+      floor.isCompleted = floor.progress === 100;
+    };
+
+    // Step 2: Recursive isCompleted & progress update by area
+
+    if (area === "FLOOR" && floorIndex != null) {
+      const floor = record.floors[floorIndex];
+      floor.isCompleted = newStatus;
+
+      floor.flats.forEach((flat: FlatItem) => {
+        flat.isCompleted = newStatus;
+        flat.areas.forEach((area: AreaItem) => {
+          area.isCompleted = newStatus;
+          area.lineItems.forEach((line: LineItem) => {
+            line.isCompleted = newStatus;
+            line.status = newStatus ? "COMPLETED" : "PENDING";
+            line.completedDate = newStatus ? new Date().toISOString() : "";
+          });
+        });
+      });
+
+      updateFloorProgress(floor);
+    } else if (area === "FLAT" && floorIndex != null && flateIndex != null) {
+      const flat = record.floors[floorIndex].flats[flateIndex];
+      flat.isCompleted = newStatus;
+
+      flat.areas.forEach((area: AreaItem) => {
+        area.isCompleted = newStatus;
+        area.lineItems.forEach((line: LineItem) => {
+          line.isCompleted = newStatus;
+          line.status = newStatus ? "COMPLETED" : "PENDING";
+          line.completedDate = newStatus ? new Date().toISOString() : "";
+        });
+      });
+
+      // updateFlatProgress(flat);
+      updateFloorProgress(record.floors[floorIndex]);
+    } else if (area === "AREA" && areaIndex != null) {
+      if (floorIndex != null && flateIndex != null) {
+        // for typical
+        const areaItem =
+          record.floors[floorIndex].flats[flateIndex].areas[areaIndex];
+        // areaItem.isCompleted = newStatus;
+
+        areaItem.lineItems.forEach((line: LineItem) => {
+          line.isCompleted = newStatus;
+          line.status = newStatus ? "COMPLETED" : "PENDING";
+          line.completedDate = newStatus ? new Date().toISOString() : "";
+        });
+
+        // updateFlatProgress(record.floors[floorIndex].flats[flateIndex]);
+        updateFloorProgress(record.floors[floorIndex]);
+      } else {
+        // for with_qty and without_qty
+        const areaItem = record.areas[areaIndex];
+        // areaItem.isCompleted = newStatus;
+
+        areaItem.lineItems.forEach((line: LineItem) => {
+          line.isCompleted = newStatus;
+          line.status = newStatus ? "COMPLETED" : "PENDING";
+          line.completedDate = newStatus ? new Date().toISOString() : "";
+        });
+        updateAreaProgress(areaItem);
+      }
+    } else if (area === "LINE" && areaIndex != null && lineIndex != null) {
+      if (floorIndex != null && flateIndex != null) {
+        // for typical
+        const areaItem =
+          record.floors[floorIndex].flats[flateIndex].areas[areaIndex];
+        const line = areaItem.lineItems[lineIndex];
+        line.isCompleted = newStatus;
+        line.status = newStatus ? "COMPLETED" : "PENDING";
+        line.completedDate = newStatus ? new Date().toISOString() : "";
+
+        // const total = areaItem.lineItems.length;
+        // const completed = areaItem.lineItems.filter(
+        //   (l: LineItem) => l.isCompleted
+        // ).length;
+
+        // areaItem.progress =
+        //   total === 0 ? 0 : Math.round((completed / total) * 100);
+        // areaItem.isCompleted = areaItem.progress === 100;
+
+        // updateFlatProgress(record.floors[floorIndex].flats[flateIndex]);
+        updateFloorProgress(record.floors[floorIndex]);
+      } else {
+        // for with_qty and without_qty
+        const areaItem = record.areas[areaIndex];
+        const line = areaItem.lineItems[lineIndex];
+        line.isCompleted = newStatus;
+        line.status = newStatus ? "COMPLETED" : "PENDING";
+        line.completedDate = newStatus ? new Date().toISOString() : "";
+
+        // const total = areaItem.lineItems.length;
+        // const completed = areaItem.lineItems.filter(
+        //   (l: LineItem) => l.isCompleted
+        // ).length;
+
+        // areaItem.progress =
+        //   total === 0 ? 0 : Math.round((completed / total) * 100);
+        // areaItem.isCompleted = areaItem.progress === 100;
+        updateAreaProgress(areaItem);
+      }
+    }
+  };
+
+  const updateAllProgress = () => {
+    let totalLineItems = 0;
+    let completedLineItems = 0;
+    let inProgressLineItems = 0;
+
+    // Handle tab types: typical, with_qty, without_qty
+    const updateAreaProgress = (area: AreaItem) => {
+      const total = area.lineItems.length;
+      const completed = area.lineItems.filter((li) => li.isCompleted).length;
+
+      area.progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+      area.isCompleted = area.progress === 100;
+
+      totalLineItems += total;
+      completedLineItems += completed;
+      inProgressLineItems += area.lineItems.filter(
+        (li) => li.status === "IN_PROGRESS"
+      ).length;
+    };
+
+    const updateFlatProgress = (flat: FlatItem) => {
+      flat.areas.forEach(updateAreaProgress);
+
+      const total = flat.areas.reduce(
+        (sum, area) => sum + area.lineItems.length || 1,
+        0
+      );
+      const completed = flat.areas.reduce((sum, area) => {
+        return (
+          sum +
+          (area.lineItems.length > 0
+            ? area.lineItems.filter((li) => li.isCompleted).length
+            : area.isCompleted
+            ? 1
+            : 0)
+        );
+      }, 0);
+
+      flat.progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+      flat.isCompleted = flat.progress === 100;
+    };
+
+    const updateFloorProgress = (floor: FloorItem) => {
+      floor.flats.forEach(updateFlatProgress);
+
+      const total = floor.flats.reduce(
+        (sum, flat) =>
+          sum +
+          flat.areas.reduce(
+            (aSum, area) => aSum + area.lineItems.length || 1,
+            0
+          ),
+        0
+      );
+      const completed = floor.flats.reduce((sum, flat) => {
+        return (
+          sum +
+          flat.areas.reduce((aSum, area) => {
+            return (
+              aSum +
+              (area.lineItems.length > 0
+                ? area.lineItems.filter((li) => li.isCompleted).length
+                : area.isCompleted
+                ? 1
+                : 0)
+            );
+          }, 0)
+        );
+      }, 0);
+
+      floor.progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+      floor.isCompleted = floor.progress === 100;
+    };
+
+    //  1. Update `typical`
+    if (mainRecord.current.areas?.typical?.floors) {
+      mainRecord.current.areas.typical.floors.forEach(updateFloorProgress);
+      const typicalFloors = mainRecord.current.areas.typical.floors;
+      const totalLines = typicalFloors.reduce(
+        (sum: number, floor: FloorItem) => {
+          return (
+            sum +
+            floor.flats.reduce((flatSum: number, flat: FlatItem) => {
+              return (
+                flatSum +
+                flat.areas.reduce(
+                  (areaSum: number, area: AreaItem) =>
+                    areaSum + area.lineItems.length,
+                  0
+                )
+              );
+            }, 0)
+          );
+        },
+        0
+      );
+
+      const completedLines = typicalFloors.reduce(
+        (sum: number, floor: FloorItem) => {
+          return (
+            sum +
+            floor.flats.reduce((flatSum: number, flat: FlatItem) => {
+              return (
+                flatSum +
+                flat.areas.reduce(
+                  (areaSum:number, area:AreaItem) =>
+                    areaSum +
+                    area.lineItems.filter((li) => li.isCompleted).length,
+                  0
+                )
+              );
+            }, 0)
+          );
+        },
+        0
+      );
+
+      mainRecord.current.areas.typical.progress =
+        totalLines === 0 ? 0 : Math.round((completedLines / totalLines) * 100);
     }
 
-    setTabRecord(updatedRecord );
-  }, [tabRecord]);
+    //  2. Update `with_qty`
+    if (mainRecord.current.areas?.with_qty?.areas) {
+      mainRecord.current.areas.with_qty.areas.forEach(updateAreaProgress);
+      const all = mainRecord.current.areas.with_qty.areas;
+      const total = all.reduce(
+        (sum: number, area: AreaItem) => sum + area.lineItems.length,
+        0
+      );
+      const completed = all.reduce(
+        (sum: number, area: AreaItem) =>
+          sum + area.lineItems.filter((li) => li.isCompleted).length,
+        0
+      );
+      mainRecord.current.areas.with_qty.progress =
+        total === 0 ? 0 : Math.round((completed / total) * 100);
+    }
+
+    //  3. Update `without_qty`
+    if (mainRecord.current.areas?.without_qty?.areas) {
+      mainRecord.current.areas.without_qty.areas.forEach(updateAreaProgress);
+      const all = mainRecord.current.areas.without_qty.areas;
+      const total = all.reduce(
+        (sum: number, area: AreaItem) => sum + area.lineItems.length,
+        0
+      );
+      const completed = all.reduce(
+        (sum: number, area: AreaItem) =>
+          sum + area.lineItems.filter((li) => li.isCompleted).length,
+        0
+      );
+      mainRecord.current.areas.without_qty.progress =
+        total === 0 ? 0 : Math.round((completed / total) * 100);
+    }
+
+    // 4. Update global project summary
+    const overallProgress =
+      totalLineItems === 0
+        ? 0
+        : Math.round((completedLineItems / totalLineItems) * 100);
+    mainRecord.current.progressSummary = {
+      overallProgress,
+      lastUpdated: new Date().toISOString(),
+      totalLineItems,
+      completedLineItems,
+      inProgressLineItems,
+      pendingLineItems:
+        totalLineItems - completedLineItems - inProgressLineItems,
+    };
+    // 4. Update DashBoard
+    let db: DashBoardItem = {
+      ...dbRecord,
+      overallProgress,
+      lastUpdated: formatDateTime(new Date().toISOString()),
+    };
+    console.log("dashBoard Item", db);
+
+    setDbRecord({ ...db });
+  };
+
+  const resetTab = () => {
+    mainRecord.current = structuredClone(initialMainRecord.current);
+    dispatch(setTab("typical"));
+    setTabRecord({ ...mainRecord.current.areas.typical });
+    toast.info("Tab Reset", { position: "top-right" });
+  };
+
+  const saveProgress = () => {
+    updateAllProgress();
+    let postBody = {
+      typical: mainRecord.current?.areas?.typical,
+      with_qty: mainRecord.current?.areas?.with_qty,
+      without_qty: mainRecord.current?.areas?.without_qty,
+    };
+    console.log(postBody);
+    toast.success("Saved Progress", { position: "top-right" });
+    // POST API Call With postBody
+  };
 
   useEffect(() => {
     getInitial();
   }, []);
 
-  // const deviceType = useSelector((state: RootState) => state.device.type); // can be Mobile , Tablet or Desktop
-
-  {
-    console.log(tabRecord);
-  }
   return (
     <div className="flex flex-col w-screen bg-muted">
+      <Toaster richColors />
       <div className="flex justify-center align-middle">
         <DashboardCompo dashboradItem={dbRecord} />
       </div>
@@ -337,8 +867,31 @@ function App() {
           <FilterCompo />
         </div>
         <div className="w-full md:w-[70%] md:h-full flex flex-col items-center justify-center p-4">
-          {/* <h1>You're using: {deviceType}</h1> */}
-          <TabCompo formChange={formChange} tabRecod={tabRecord} />
+          <TabCompo
+            tabChangeFn={tabChangeFn}
+            formChange={formChange}
+            tabRecod={tabRecord}
+          />
+          <div className="flex flex-row w-full justify-start align-baseline">
+            <Button
+              variant={"default"}
+              className="me-2"
+              onClick={() => {
+                saveProgress();
+              }}
+            >
+              Save Progress
+            </Button>
+            <Button
+              variant={"outline"}
+              className="mx-2"
+              onClick={() => {
+                resetTab();
+              }}
+            >
+              Reset Tabs
+            </Button>
+          </div>
         </div>
       </div>
     </div>
