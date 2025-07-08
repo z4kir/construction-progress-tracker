@@ -33,9 +33,10 @@ const AreaAccordionCompo = ({
   flatIndex,
   floorIndex,
 }: Props) => {
-  const areaChangeFn = (newVal: boolean, areaIndex: number) => {
+  const areaChangeFn = (newVal: boolean, areaIndex: number|undefined,field:string) => {
     let changeObj: FormChangeItem = {
       value: newVal,
+      field:field,
       area: "AREA",
       isCheckChange: true,
       floorIndex: floorIndex,
@@ -53,14 +54,20 @@ const AreaAccordionCompo = ({
           className="my-2"
           type="single"
           value={area.collapse ? area.id : ""}
-          onValueChange={(val) => {
-            if (val === "") {
-              area.collapse = false;
+          onValueChange={(value) => {
+            let val:boolean;
+            if (value === "") {
+              val = false;
             } else {
-              area.collapse = true;
+              val = true;
             }
             let changeObj: FormChangeItem = {
+              value:val,
+              field:"collapse",
               area: "AREA",
+              floorIndex:floorIndex,
+              flateIndex:flatIndex,
+              areaIndex:area.areaIndex,
               isCheckChange: false,
             };
             formChange(changeObj);
@@ -83,22 +90,10 @@ const AreaAccordionCompo = ({
                       onCheckedChange={(val) => {
                         let newVal: boolean = !!val;
                         area.isCompleted = newVal;
-                        areaChangeFn(newVal, areaIndex);
-                        // let changeObj: FormChangeItem = {
-                        //   value: newVal,
-                        //   area: "FLOOR",
-                        //   isCheckChange: true,
-                        //   floorIndex: floorIndex,
-                        //   flateIndex: flatIndex,
-                        //   areaIndex: areaIndex,
-                        // };
-                        // formChange(changeObj);
+                        areaChangeFn(newVal, area.areaIndex,"isCompleted");
                       }}
                     />
-                    <label
-                      // htmlFor={`checkbox-${area.id}`}
-                      className="text-sm font-medium hover:cursor-pointer"
-                    >
+                    <label className="text-sm font-medium hover:cursor-pointer">
                       Mark {area.name} Completed
                     </label>
                   </div>
@@ -110,12 +105,9 @@ const AreaAccordionCompo = ({
                     <span className="text-sm">{area.progress}%</span>
                   </div>
                 </div>
-
-                {/* <AccordionTrigger className="w-auto px-2" /> */}
               </div>
             </AccordionTrigger>
             <AccordionContent className="mt-4 text-sm bg-gray-50 overflow-auto">
-              {/* Expandable content here if needed */}
               <div className="px-4">
                 <LineCompo
                   items={area.lineItems}

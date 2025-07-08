@@ -6,6 +6,7 @@ type FloorItem = {
   progress: number;
   isCompleted: boolean;
   collapse: boolean;
+  floorIndex?:number;
   flats: FlatItem[];
 };
 
@@ -15,6 +16,7 @@ type FlatItem = {
   progress: number;
   isCompleted: boolean;
   collapse: boolean;
+  flateIndex?:number;
   areas: AreaItem[];
 };
 
@@ -24,6 +26,7 @@ type AreaItem = {
   progress: number;
   isCompleted: boolean;
   collapse: boolean;
+  areaIndex?:number;
   lineItems: LineItem[];
 };
 

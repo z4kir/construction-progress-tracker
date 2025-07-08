@@ -1,20 +1,20 @@
 // import './App.css'
 
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useDeviceListener } from "./app/hooks/useDeviceListener";
-import type { AppDispatch, RootState } from "./app/store";
-import TabCompo from "./app/components/TabCompo";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Card, CardTitle } from "./components/ui/card";
-import FilterCompo from "./app/components/FilterCompo";
+import { toast, Toaster } from "sonner";
 import DashboardCompo from "./app/components/DashboardCompo";
+import FilterCompo from "./app/components/FilterCompo";
+import TabCompo from "./app/components/TabCompo";
+import { setTab } from "./app/features/tabSlice";
+import { useDeviceListener } from "./app/hooks/useDeviceListener";
+import type { AreaItem, FlatItem, FloorItem } from "./app/model/AccordionItem";
 import type { DashBoardItem } from "./app/model/DashBoardItem";
 import type { FormChangeItem } from "./app/model/FormChangeItem";
-import type { AreaItem, FlatItem, FloorItem } from "./app/model/AccordionItem";
 import type { LineItem } from "./app/model/LineItem";
+import type { AppDispatch, RootState } from "./app/store";
 import { Button } from "./components/ui/button";
-import { setTab } from "./app/features/tabSlice";
-import { toast, Toaster } from "sonner";
+import type { FilterItem } from "./app/model/FilterItem";
 
 function App() {
   // sets devicetype according to screen width
@@ -24,6 +24,33 @@ function App() {
   let dispatch = useDispatch<AppDispatch>();
   const currentTab = useSelector((state: RootState) => state.tab.currentTab);
 
+  const mainRecord = useRef<any>({});
+  const initialMainRecord = useRef<any>({});
+  const initialFilter = useRef<FilterItem>({
+    lineItemFilter: {
+      value: "none",
+      choice: [{ label: "All Line Item", value: "none" }],
+    },
+    statusFilter: {
+      value: "none",
+      choice: [
+        { label: "All Statuses", value: "none" },
+        { label: "Pending", value: "PENDING" },
+        { label: "Completed", value: "COMPLETED" },
+        { label: "In Progress", value: "IN_PROGRESS" },
+      ],
+    },
+    quickAction: {
+      value: "none",
+      choice: [
+        { label: "Chose Action", value: "none" },
+        { label: "Expand All Section", value: "expand" },
+        { label: "Collapse All Section", value: "collapse" },
+        { label: "Reset Filter", value: "reset" },
+      ],
+    },
+  });
+
   const [tabRecord, setTabRecord] = useState<any>({});
   const [dbRecord, setDbRecord] = useState<DashBoardItem>({
     lastUpdated: "",
@@ -31,12 +58,115 @@ function App() {
     projectName: "",
     workOrder: "",
   }); // dashboard record as
+  const [filter, setFilter] = useState<FilterItem>(
+    structuredClone(initialFilter.current)
+  );
 
-  const mainRecord = useRef<any>({});
-  const initialMainRecord = useRef<any>({});
   // const currentTab = useRef("typical");
 
+  const injectIndexesToTabRecord = (record: typeof tabRecord) => {
+    if (currentTab === "typical") {
+      return {
+        ...record,
+        floors:
+          record.floors?.map((floor: FloorItem, floorIndex: number) => ({
+            ...floor,
+            floorIndex,
+            flats:
+              floor.flats?.map((flat, flateIndex) => ({
+                ...flat,
+                flateIndex,
+                areas:
+                  flat.areas?.map((area, areaIndex) => ({
+                    ...area,
+                    areaIndex,
+                    lineItems:
+                      area.lineItems?.map((li, lineIndex) => ({
+                        ...li,
+                        lineIndex,
+                      })) ?? [],
+                  })) ?? [],
+              })) ?? [],
+          })) ?? [],
+      };
+    } else {
+      return {
+        ...record,
+        areas:
+          record.areas?.map((area: AreaItem, areaIndex: number) => ({
+            ...area,
+            areaIndex,
+            lineItems:
+              area.lineItems?.map((li, lineIndex) => ({
+                ...li,
+                lineIndex,
+                areaIndex,
+              })) ?? [],
+          })) ?? [],
+      };
+    }
+  };
+
+  const searchTabRecord = useMemo(() => {
+    let lineItem: string = filter.lineItemFilter.value;
+    let status: string = filter.statusFilter.value;
+    let lineFilter: boolean = true;
+    let statusFilter: boolean = true;
+    if (lineItem === "none") lineFilter = false;
+
+    if (status === "none") statusFilter = false;
+
+    if (!lineFilter && !statusFilter) {
+      return injectIndexesToTabRecord(tabRecord);
+    }
+
+    if (currentTab === "typical") {
+      return {
+        ...tabRecord,
+        floors: tabRecord.floors
+          ?.map((floor: FloorItem, floorIndex: number) => ({
+            ...floor,
+            floorIndex, // ✅ preserve floor index
+            flats: floor.flats
+              .map((flat, flateIndex) => ({
+                ...flat,
+                flateIndex, // ✅ preserve flat index
+                areas: flat.areas
+                  .map((area, areaIndex) => ({
+                    ...area,
+                    areaIndex,
+                    lineItems: area.lineItems
+                      .map((li, lineIndex) => ({ ...li, lineIndex }))
+                      .filter((li) =>
+                        li.name.toLowerCase().includes(lineItem.toLowerCase())
+                      ),
+                  }))
+                  .filter((a) => a.lineItems.length > 0),
+              }))
+              .filter((f) => f.areas.length > 0),
+          }))
+          .filter((f: any) => f.flats.length > 0),
+      };
+    } else {
+      return {
+        ...tabRecord,
+        areas: tabRecord.areas
+          ?.map((area: AreaItem, areaIndex: number) => ({
+            ...area,
+            areaIndex,
+            lineItems: area.lineItems
+              .map((li, lineIndex) => ({ ...li, lineIndex }))
+              .filter((li) =>
+                li.name.toLowerCase().includes(lineItem.toLowerCase())
+              ),
+          }))
+          .filter((a: any) => a.lineItems.length > 0),
+      };
+    }
+  }, [filter, tabRecord, currentTab]);
+
   const getInitial = () => {
+    dispatch(setTab("typical"));
     // fetch Api to get initial value
     const initialValue = {
       project: {
@@ -377,11 +507,14 @@ function App() {
         },
       },
     };
+
+    // setting dashboard
     let workOrder: string =
       initialValue.workOrder.id + "-" + initialValue.workOrder.title;
     let formattedDate = formatDateTime(
       initialValue.progressSummary.lastUpdated
     );
+
     let dbObj: DashBoardItem = {
       projectName: initialValue.project.name,
       workOrder: workOrder,
@@ -389,10 +522,55 @@ function App() {
       lastUpdated: formattedDate,
     };
     setDbRecord(dbObj);
+
     initialMainRecord.current = structuredClone(initialValue);
     mainRecord.current = initialValue;
-    dispatch(setTab("typical"));
+
+    // setting filter
+    let listItems: LineItem[] = getLineItems();
+    let filt: FilterItem = filter;
+    for (let i = 0; i < listItems.length; i++) {
+      const name = listItems[i].name;
+      let obj = { label: name, value: name };
+      filt.lineItemFilter.choice.push(obj);
+    }
+    setFilter({ ...filt });
     setTabRecord({ ...initialValue.areas.typical });
+  };
+
+  const getLineItems = (): LineItem[] => {
+    switch (currentTab) {
+      case "typical":
+        return (
+          mainRecord.current.areas.typical?.floors?.flatMap(
+            (floor: FloorItem) =>
+              floor.flats.flatMap((flat) =>
+                flat.areas.flatMap((area) => area.lineItems || [])
+              )
+          ) || []
+        );
+      case "with_qty":
+        return (
+          mainRecord.current.areas.with_qty?.areas?.flatMap(
+            (area: AreaItem) => area.lineItems || []
+          ) || []
+        );
+      case "without_qty":
+        return (
+          mainRecord.current.areas.without_qty?.areas?.flatMap(
+            (area: AreaItem) => area.lineItems || []
+          ) || []
+        );
+      default:
+        return (
+          mainRecord.current.areas.typical?.floors?.flatMap(
+            (floor: FloorItem) =>
+              floor.flats.flatMap((flat) =>
+                flat.areas.flatMap((area) => area.lineItems || [])
+              )
+          ) || []
+        );
+    }
   };
 
   const formatDateTime = (input: string): string => {
@@ -445,7 +623,54 @@ function App() {
 
   const formChange = useCallback(
     (obj: FormChangeItem) => {
+      console.log(obj);
+
       let updatedRecord = structuredClone(tabRecord);
+      if (currentTab === "typical") {
+        if (obj.area === "FLOOR" && obj.floorIndex !== undefined) {
+          updatedRecord.floors[obj.floorIndex][obj.field] = obj.value;
+          console.log("updatedRecord", updatedRecord);
+        } else if (
+          obj.area === "FLAT" &&
+          obj.floorIndex !== undefined &&
+          obj.flateIndex !== undefined
+        ) {
+          updatedRecord.floors[obj.floorIndex].flats[obj.flateIndex][
+            obj.field
+          ] = obj.value;
+        } else if (
+          obj.area === "AREA" &&
+          obj.floorIndex !== undefined &&
+          obj.flateIndex !== undefined &&
+          obj.areaIndex !== undefined
+        ) {
+          updatedRecord.floors[obj.floorIndex].flats[obj.flateIndex].areas[
+            obj.areaIndex
+          ][obj.field] = obj.value;
+        } else if (
+          obj.area === "LINE" &&
+          obj.floorIndex !== undefined &&
+          obj.flateIndex !== undefined &&
+          obj.areaIndex !== undefined &&
+          obj.lineIndex !== undefined
+        ) {
+          updatedRecord.floors[obj.floorIndex].flats[obj.flateIndex].areas[
+            obj.areaIndex
+          ].lineItems[obj.lineIndex][obj.field] = obj.value;
+        }
+      } else {
+        if (obj.area === "AREA" && obj.areaIndex !== undefined) {
+          updatedRecord.areas[obj.areaIndex][obj.field] = obj.value;
+        } else if (
+          obj.area === "LINE" &&
+          obj.areaIndex !== undefined &&
+          obj.lineIndex !== undefined
+        ) {
+          updatedRecord.areas[obj.areaIndex].lineItems[obj.lineIndex][
+            obj.field
+          ] = obj.value;
+        }
+      }
       let message: string = "";
       if (obj.isCheckChange) {
         setAllNestedCheck(obj, updatedRecord);
@@ -459,7 +684,7 @@ function App() {
           toast.info(message, { position: "top-right" });
         }
       }
-      // updateAllProgress();
+
       updateMainRecord(updatedRecord);
       setTabRecord(updatedRecord);
     },
@@ -481,13 +706,15 @@ function App() {
       default:
         break;
     }
+    updateAllProgress();
   };
 
   const setAllNestedCheck = (obj: FormChangeItem, record: typeof tabRecord) => {
     const { floorIndex, flateIndex, areaIndex, lineIndex, area, value } = obj;
-    const newStatus = value ?? false;
-    console.log("floorIndex", floorIndex);
-
+    if (typeof value !== "boolean") {
+      return;
+    }
+    const newStatus: boolean = value ?? false;
     // Step 1: Line-based progress calculation helpers
 
     const getLineStatsFromArea = (area: AreaItem) => {
@@ -663,8 +890,8 @@ function App() {
       const total = area.lineItems.length;
       const completed = area.lineItems.filter((li) => li.isCompleted).length;
 
-      area.progress = total === 0 ? 0 : Math.round((completed / total) * 100);
-      area.isCompleted = area.progress === 100;
+      // area.progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+      // area.isCompleted = area.progress === 100;
 
       totalLineItems += total;
       completedLineItems += completed;
@@ -676,55 +903,56 @@ function App() {
     const updateFlatProgress = (flat: FlatItem) => {
       flat.areas.forEach(updateAreaProgress);
 
-      const total = flat.areas.reduce(
-        (sum, area) => sum + area.lineItems.length || 1,
-        0
-      );
-      const completed = flat.areas.reduce((sum, area) => {
-        return (
-          sum +
-          (area.lineItems.length > 0
-            ? area.lineItems.filter((li) => li.isCompleted).length
-            : area.isCompleted
-            ? 1
-            : 0)
-        );
-      }, 0);
+      // const total = flat.areas.reduce(
+      //   (sum, area) => sum + area.lineItems.length || 1,
+      //   0
+      // );
+      // const completed = flat.areas.reduce((sum, area) => {
+      //   return (
+      //     sum +
+      //     (area.lineItems.length > 0
+      //       ? area.lineItems.filter((li) => li.isCompleted).length
+      //       : area.isCompleted
+      //       ? 1
+      //       : 0)
+      //   );
+      // }, 0);
 
-      flat.progress = total === 0 ? 0 : Math.round((completed / total) * 100);
-      flat.isCompleted = flat.progress === 100;
+      // flat.progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+      // flat.isCompleted = flat.progress === 100;
     };
 
     const updateFloorProgress = (floor: FloorItem) => {
       floor.flats.forEach(updateFlatProgress);
 
-      const total = floor.flats.reduce(
-        (sum, flat) =>
-          sum +
-          flat.areas.reduce(
-            (aSum, area) => aSum + area.lineItems.length || 1,
-            0
-          ),
-        0
-      );
-      const completed = floor.flats.reduce((sum, flat) => {
-        return (
-          sum +
-          flat.areas.reduce((aSum, area) => {
-            return (
-              aSum +
-              (area.lineItems.length > 0
-                ? area.lineItems.filter((li) => li.isCompleted).length
-                : area.isCompleted
-                ? 1
-                : 0)
-            );
-          }, 0)
-        );
-      }, 0);
+      // const total = floor.flats.reduce(
+      //   (sum, flat) =>
+      //     sum +
+      //     flat.areas.reduce(
+      //       (aSum, area) => aSum + area.lineItems.length || 1,
+      //       0
+      //     ),
+      //   0
+      // );
+      // const completed = floor.flats.reduce((sum, flat) => {
+      //   return (
+      //     sum +
+      //     flat.areas.reduce((aSum, area) => {
+      //       return (
+      //         aSum +
+      //         (area.lineItems.length > 0
+      //           ? area.lineItems.filter((li) => li.isCompleted).length
+      //           : area.isCompleted
+      //           ? 1
+      //           : 0)
+      //       );
+      //     }, 0)
+      //   );
+      // }, 0);
 
-      floor.progress = total === 0 ? 0 : Math.round((completed / total) * 100);
-      floor.isCompleted = floor.progress === 100;
+      // floor.progress =
+      //   total === 0 ? 0 : Math.round((completed / total) * 100);
+      // floor.isCompleted = floor.progress === 100;
     };
 
     //  1. Update `typical`
@@ -758,7 +986,7 @@ function App() {
               return (
                 flatSum +
                 flat.areas.reduce(
-                  (areaSum:number, area:AreaItem) =>
+                  (areaSum: number, area: AreaItem) =>
                     areaSum +
                     area.lineItems.filter((li) => li.isCompleted).length,
                   0
@@ -828,9 +1056,31 @@ function App() {
       overallProgress,
       lastUpdated: formatDateTime(new Date().toISOString()),
     };
-    console.log("dashBoard Item", db);
-
     setDbRecord({ ...db });
+  };
+
+  // type[line(lineItemFilter),status(statusFilter),quick(quickAction)]
+  const filterChange = (value: string, type: string): void => {
+    if (type === "line") {
+      let filt = filter;
+      filt.lineItemFilter.value = value;
+      setFilter({ ...filt });
+    }
+
+    if (type === "quick") {
+      switch (value) {
+        case "reset":
+          setFilter(structuredClone(initialFilter.current));
+          break;
+        case "expand":
+          break;
+        case "collapse":
+          break;
+
+        default:
+          break;
+      }
+    }
   };
 
   const resetTab = () => {
@@ -841,7 +1091,6 @@ function App() {
   };
 
   const saveProgress = () => {
-    updateAllProgress();
     let postBody = {
       typical: mainRecord.current?.areas?.typical,
       with_qty: mainRecord.current?.areas?.with_qty,
@@ -864,13 +1113,13 @@ function App() {
       </div>
       <div className="flex flex-col md:flex-row min-h-screen">
         <div className=" w-full  md:w-[30%]   flex  justify-center ">
-          <FilterCompo />
+          <FilterCompo filterItem={filter} filterChange={filterChange} />
         </div>
         <div className="w-full md:w-[70%] md:h-full flex flex-col items-center justify-center p-4">
           <TabCompo
             tabChangeFn={tabChangeFn}
             formChange={formChange}
-            tabRecod={tabRecord}
+            tabRecod={searchTabRecord}
           />
           <div className="flex flex-row w-full justify-start align-baseline">
             <Button

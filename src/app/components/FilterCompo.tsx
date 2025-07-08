@@ -7,10 +7,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { FilterItem } from "../model/FilterItem";
 
-type Props = {};
+type Props = {
+  filterItem: FilterItem;
+  filterChange: (value: string, type: string) => void;
+};
 
-const FilterCompo = ({}: Props) => {
+const FilterCompo = ({ filterItem, filterChange }: Props) => {
   return (
     <Card className="m-4 p-3 w-full shadow-sm gap-2 h-fit">
       <CardHeader className="px-2">
@@ -23,14 +27,21 @@ const FilterCompo = ({}: Props) => {
         {/* Filter by Line Item */}
         <div className="space-y-2">
           <Label htmlFor="line-item">Filter by Line Item</Label>
-          <Select>
+          <Select
+            value={filterItem.lineItemFilter?.value}
+            onValueChange={(val) => {
+              filterChange(val, "line");
+            }}
+          >
             <SelectTrigger id="line-item" className="w-full">
               <SelectValue placeholder="All line items" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All line items</SelectItem>
-              <SelectItem value="item-1">Item 1</SelectItem>
-              <SelectItem value="item-2">Item 2</SelectItem>
+              {filterItem.lineItemFilter.choice.map((obj, index) => (
+                <SelectItem key={index} value={obj.value}>
+                  {obj.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -38,14 +49,21 @@ const FilterCompo = ({}: Props) => {
         {/* Show Status */}
         <div className="space-y-2">
           <Label htmlFor="status">Show Status</Label>
-          <Select>
+          <Select
+            value={filterItem.statusFilter?.value}
+            onValueChange={(val) => {
+              filterChange(val, "status");
+            }}
+          >
             <SelectTrigger id="status" className="w-full">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
+              {filterItem.statusFilter.choice.map((obj, index) => (
+                <SelectItem key={index} value={obj.value}>
+                  {obj.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -53,13 +71,21 @@ const FilterCompo = ({}: Props) => {
         {/* Quick Actions */}
         <div className="space-y-2">
           <Label htmlFor="actions">Quick Actions</Label>
-          <Select>
+          <Select
+            value={filterItem.quickAction?.value}
+            onValueChange={(val) => {
+              filterChange(val, "quick");
+            }}
+          >
             <SelectTrigger id="actions" className="w-full">
               <SelectValue placeholder="Choose action" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="download">Download Report</SelectItem>
-              <SelectItem value="reset">Reset Filters</SelectItem>
+              {filterItem.quickAction.choice.map((obj, index) => (
+                <SelectItem key={index} value={obj.value}>
+                  {obj.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

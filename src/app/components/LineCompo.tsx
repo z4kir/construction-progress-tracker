@@ -16,7 +16,6 @@ import type { RootState } from "../store";
 
 type Props = {
   items: LineItem[];
-  // onChange?: (item: LineItem) => void;
   formChange: (obj: FormChangeItem) => void;
   areaIndex: number;
   floorIndex?: number;
@@ -31,7 +30,6 @@ const LineCompo = ({
   floorIndex,
 }: Props) => {
   const currentTab = useSelector((state: RootState) => state.tab.currentTab);
-  console.log(currentTab);
 
   const formatDateForInput = (isoDate: string | undefined | null): string => {
     if (!isoDate) return ""; // prevent NaN
@@ -87,13 +85,15 @@ const LineCompo = ({
                     value={item?.addQuantity?.value}
                     onChange={(e) => {
                       if (item.addQuantity) {
-                        item.addQuantity.value = Number(e.target.value);
                         let changeObj: FormChangeItem = {
+                          value: Number(e.target.value),
                           area: "LINE",
+                          field:"addQuantity",
                           isCheckChange: false,
                           floorIndex: floorIndex,
                           flateIndex: flatIndex,
                           areaIndex: areaIndex,
+                           lineIndex:item.lineIndex
                         };
                         formChange(changeObj);
                       }
@@ -124,12 +124,13 @@ const LineCompo = ({
                     item.isCompleted = newVal;
                     let changeObj: FormChangeItem = {
                       value: newVal,
+                      field:"isCompleted",
                       area: "LINE",
                       isCheckChange: true,
                       floorIndex: floorIndex,
                       flateIndex: flatIndex,
                       areaIndex: areaIndex,
-                      lineIndex: index,
+                      lineIndex:item.lineIndex
                     };
                     formChange(changeObj);
                   }}
@@ -142,15 +143,16 @@ const LineCompo = ({
                   type="datetime-local"
                   value={formatDateForInput(item.estimatedStartDate)}
                   onChange={(e) => {
-                    console.log(e.target.value);
-
-                    item.estimatedStartDate = toISODateUTC(e.target.value);
+                    // item.estimatedStartDate = toISODateUTC(e.target.value);
                     let changeObj: FormChangeItem = {
+                      value: toISODateUTC(e.target.value),
+                      field:"estimatedStartDate",
                       area: "LINE",
                       isCheckChange: false,
                       floorIndex: floorIndex,
                       flateIndex: flatIndex,
                       areaIndex: areaIndex,
+                       lineIndex:item.lineIndex
                     };
                     formChange(changeObj);
                   }}
@@ -171,13 +173,15 @@ const LineCompo = ({
                   className="w-auto"
                   value={item.remarks}
                   onChange={(e) => {
-                    item.remarks = e.target.value;
                     let changeObj: FormChangeItem = {
+                      value:e.target.value,
+                      field:"remarks",
                       area: "LINE",
                       isCheckChange: false,
                       floorIndex: floorIndex,
                       flateIndex: flatIndex,
                       areaIndex: areaIndex,
+                      lineIndex:item.lineIndex
                     };
                     formChange(changeObj);
                   }}

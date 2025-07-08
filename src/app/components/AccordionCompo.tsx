@@ -15,7 +15,6 @@ type Props = {
 };
 
 const AccordionCompo = ({ floorList, formChange }: Props) => {
-  console.log("floorList", floorList);
   return (
     <div>
       {floorList?.map((floor, floorIndex) => (
@@ -24,16 +23,24 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
           key={floorIndex}
           type="single"
           value={floor.collapse ? floor.id : ""}
-          onValueChange={(val) => {
-            if (val === "") {
-              floor.collapse = false;
+          onValueChange={(value) => {
+            let val: boolean;
+            if (value === "") {
+              // floor.collapse = false;
+              val = false;
             } else {
-              floor.collapse = true;
+              // floor.collapse = true;
+              val = true;
             }
             let changeObj: FormChangeItem = {
+              value: val,
+              field: "collapse",
               area: "FLOOR",
+              floorIndex: floor.floorIndex,
               isCheckChange: false,
             };
+            console.log(floor.floorIndex);
+            
             formChange(changeObj);
           }}
           collapsible
@@ -58,17 +65,15 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
                         floor.isCompleted = newVal;
                         let changeObj: FormChangeItem = {
                           value: newVal,
+                          field: "isCompleted",
                           area: "FLOOR",
                           isCheckChange: true,
-                          floorIndex: floorIndex,
+                          floorIndex: floor.floorIndex,
                         };
                         formChange(changeObj);
                       }}
                     />
-                    <label
-                      // htmlFor={`checkbox-${floor.id}`}
-                      className="text-sm font-medium hover:cursor-pointer"
-                    >
+                    <label className="text-sm font-medium hover:cursor-pointer">
                       Mark {floor.name} Completed
                     </label>
                   </div>
@@ -80,13 +85,10 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
                     <span className="text-sm">{floor.progress}%</span>
                   </div>
                 </div>
-                {/* Icon (optional) on right */}
-                {/* <AccordionTrigger className="w-auto px-2" /> */}
               </div>
             </AccordionTrigger>
 
             <AccordionContent className="mt-4 px-2 text-sm  overflow-auto">
-              {/* Expandable content here if needed */}
               <div>
                 {floor?.flats?.map((flat, flatIndex) => (
                   <Accordion
@@ -94,16 +96,23 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
                     type="single"
                     key={flatIndex}
                     value={flat.collapse ? flat.id : ""}
-                    onValueChange={(val) => {
-                      if (val === "") {
-                        flat.collapse = false;
+                    onValueChange={(value) => {
+                      let val: boolean;
+                      if (value === "") {
+                        val = false;
                       } else {
-                        flat.collapse = true;
+                        val = true;
                       }
                       let changeObj: FormChangeItem = {
+                        value: val,
+                        field: "collapse",
+                        floorIndex: floor.floorIndex,
+                        flateIndex: flat.flateIndex,
                         area: "FLAT",
                         isCheckChange: false,
                       };
+                      console.log(flat);
+                      
                       formChange(changeObj);
                     }}
                     collapsible
@@ -126,18 +135,16 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
                                   flat.isCompleted = newVal;
                                   let changeObj: FormChangeItem = {
                                     value: newVal,
+                                    field: "isCompleted",
                                     area: "FLAT",
                                     isCheckChange: true,
-                                    floorIndex: floorIndex,
-                                    flateIndex: flatIndex,
+                                    floorIndex: floor.floorIndex,
+                                    flateIndex: flat.flateIndex,
                                   };
                                   formChange(changeObj);
                                 }}
                               />
-                              <label
-                                // htmlFor={`checkbox-${flat.id}`}
-                                className="text-sm font-medium hover:cursor-pointer"
-                              >
+                              <label className="text-sm font-medium hover:cursor-pointer">
                                 Mark {flat.name} Completed
                               </label>
                             </div>
@@ -152,20 +159,14 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
                               <span className="text-sm">{flat.progress}%</span>
                             </div>
                           </div>
-
-                          {/* <AccordionTrigger className="w-auto px-2" /> */}
-                          {/* Icon (optional) on right */}
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="mt-4 px-2 text-sm  overflow-auto">
-                        {/* Expandable content here if needed */}
-
                         <AreaAccordionCompo
                           formChange={formChange}
                           areas={flat.areas}
-                          floorIndex={floorIndex}
-                          flatIndex={flatIndex}
-                          // onCheckChange={(val) => console.log("Checked:", val)}
+                          floorIndex={floor.floorIndex}
+                          flatIndex={flat.flateIndex}
                         />
                       </AccordionContent>
                     </AccordionItem>

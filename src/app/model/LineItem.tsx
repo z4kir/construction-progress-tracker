@@ -1,5 +1,6 @@
 export type LineItem = {
   id: string;
+  lineIndex?:number;
   name: string;
   category: string;
   plannedQuantity: { value: number; unit: string };
