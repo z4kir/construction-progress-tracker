@@ -39,7 +39,7 @@
           "name": "Floor 1",
           "progress": 0,
           "isCompleted": false,
-          "collapse": true,
+          "collapse": false,
           "flats": [
             {
               "id": "flat101",

@@ -26,10 +26,8 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
           onValueChange={(value) => {
             let val: boolean;
             if (value === "") {
-              // floor.collapse = false;
               val = false;
             } else {
-              // floor.collapse = true;
               val = true;
             }
             let changeObj: FormChangeItem = {
@@ -39,8 +37,6 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
               floorIndex: floor.floorIndex,
               isCheckChange: false,
             };
-            console.log(floor.floorIndex);
-            
             formChange(changeObj);
           }}
           collapsible
@@ -53,7 +49,7 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
               <div className="flex justify-between items-start w-full">
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
-                    <Checkbox
+                    <Checkbox 
                       id={`checkbox-${floor.id}`}
                       className="border-primary hover:border-[1.5px] hover:cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-white "
                       checked={floor.isCompleted}
@@ -111,8 +107,6 @@ const AccordionCompo = ({ floorList, formChange }: Props) => {
                         area: "FLAT",
                         isCheckChange: false,
                       };
-                      console.log(flat);
-                      
                       formChange(changeObj);
                     }}
                     collapsible

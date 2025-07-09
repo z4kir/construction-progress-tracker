@@ -13,7 +13,6 @@ type Props = {
 
 const TabCompo = ({ tabRecod, formChange, tabChangeFn }: Props) => {
   const currentTab = useSelector((state: RootState) => state.tab.currentTab);
-  console.log(tabRecod);
   return (
     <div className="flex w-full  flex-col ">
       <Tabs
@@ -23,7 +22,7 @@ const TabCompo = ({ tabRecod, formChange, tabChangeFn }: Props) => {
         }}
       >
         <div className=" w-full whitespace-nowrap overflow-x-auto mobile-scrollbar">
-          <TabsList className="bg-[#e9e8e8]">
+          <TabsList className="bg-[#e9e8e8] w-auto">
             <TabsTrigger value="typical">Typical Areas</TabsTrigger>
             <TabsTrigger value="with_qty">Other Areas (with Qty)</TabsTrigger>
             <TabsTrigger value="without_qty">

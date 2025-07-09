@@ -139,11 +139,10 @@ const LineCompo = ({
               </TableCell>
               <TableCell className=" text-center">
                 <Input
-                  className="w-auto"
+                  className="w-full"
                   type="datetime-local"
                   value={formatDateForInput(item.estimatedStartDate)}
                   onChange={(e) => {
-                    // item.estimatedStartDate = toISODateUTC(e.target.value);
                     let changeObj: FormChangeItem = {
                       value: toISODateUTC(e.target.value),
                       field:"estimatedStartDate",
@@ -161,7 +160,7 @@ const LineCompo = ({
               </TableCell>
               <TableCell className=" text-center">
                 <Input
-                  className="w-auto bg-muted"
+                  className="w-full bg-muted"
                   type="datetime-local"
                   readOnly={true}
                   value={formatDateForInput(item.completedDate)}

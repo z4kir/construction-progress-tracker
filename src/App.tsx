@@ -1,5 +1,3 @@
-// import './App.css'
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast, Toaster } from "sonner";
@@ -16,6 +14,12 @@ import type { AppDispatch, RootState } from "./app/store";
 import { Button } from "./components/ui/button";
 import type { FilterItem } from "./app/model/FilterItem";
 
+// Importing inital json from file
+import initialValue from "./GET-JSON.json";
+import { Label } from "./components/ui/label";
+
+// This structure intentionally keeps nested content for UI layout
+// Ignoring React.Children.only warning since <AccordionTrigger> works fine
 function App() {
   // sets devicetype according to screen width
   useDeviceListener();
@@ -62,62 +66,67 @@ function App() {
     structuredClone(initialFilter.current)
   );
 
-  // const currentTab = useRef("typical");
+  const searchTabRecord = useMemo(() => {
+    const lineItem = filter.lineItemFilter.value;
+    const status = filter.statusFilter.value;
 
-  const injectIndexesToTabRecord = (record: typeof tabRecord) => {
-    if (currentTab === "typical") {
-      return {
-        ...record,
-        floors:
-          record.floors?.map((floor: FloorItem, floorIndex: number) => ({
-            ...floor,
-            floorIndex,
-            flats:
-              floor.flats?.map((flat, flateIndex) => ({
+    const lineFilterActive = lineItem !== "none";
+    const statusFilterActive = status !== "none";
+
+    const shouldApplyFilter = lineFilterActive || statusFilterActive;
+
+    const filterLineItems = (lineItems: LineItem[]) => {
+      return lineItems
+        .map((li, lineIndex) => ({ ...li, lineIndex }))
+        .filter((li) => {
+          const matchesLine =
+            !lineFilterActive ||
+            li.name.toLowerCase().includes(lineItem.toLowerCase());
+          const matchesStatus =
+            !statusFilterActive ||
+            li.status.toLowerCase() === status.toLowerCase();
+
+          return matchesLine && matchesStatus;
+        });
+    };
+
+    // if no filters, return original tabRecord with injected indexes
+    if (!shouldApplyFilter) {
+      if (currentTab === "typical") {
+        return {
+          ...tabRecord,
+          floors: tabRecord.floors?.map(
+            (floor: FloorItem, floorIndex: number) => ({
+              ...floor,
+              floorIndex,
+              flats: floor.flats?.map((flat, flateIndex) => ({
                 ...flat,
                 flateIndex,
-                areas:
-                  flat.areas?.map((area, areaIndex) => ({
-                    ...area,
-                    areaIndex,
-                    lineItems:
-                      area.lineItems?.map((li, lineIndex) => ({
-                        ...li,
-                        lineIndex,
-                      })) ?? [],
-                  })) ?? [],
-              })) ?? [],
-          })) ?? [],
-      };
-    } else {
-      return {
-        ...record,
-        areas:
-          record.areas?.map((area: AreaItem, areaIndex: number) => ({
+                areas: flat.areas?.map((area, areaIndex) => ({
+                  ...area,
+                  areaIndex,
+                  lineItems: area.lineItems.map((li, lineIndex) => ({
+                    ...li,
+                    lineIndex,
+                  })),
+                })),
+              })),
+            })
+          ),
+        };
+      } else {
+        return {
+          ...tabRecord,
+          areas: tabRecord.areas?.map((area: AreaItem, areaIndex: number) => ({
             ...area,
             areaIndex,
-            lineItems:
-              area.lineItems?.map((li, lineIndex) => ({
-                ...li,
-                lineIndex,
-                areaIndex,
-              })) ?? [],
-          })) ?? [],
-      };
-    }
-  };
-
-  const searchTabRecord = useMemo(() => {
-    let lineItem: string = filter.lineItemFilter.value;
-    let status: string = filter.statusFilter.value;
-    let lineFilter: boolean = true;
-    let statusFilter: boolean = true;
-    if (lineItem === "none") lineFilter = false;
-
-    if (status === "none") statusFilter = false;
-
-    if (!lineFilter && !statusFilter) {
-      return injectIndexesToTabRecord(tabRecord);
+            lineItems: area.lineItems.map((li, lineIndex) => ({
+              ...li,
+              lineIndex,
+            })),
+          })),
+        };
+      }
     }
 
     if (currentTab === "typical") {
@@ -126,387 +135,47 @@ function App() {
         floors: tabRecord.floors
           ?.map((floor: FloorItem, floorIndex: number) => ({
             ...floor,
-            floorIndex, // ✅ preserve floor index
+            floorIndex,
             flats: floor.flats
-              .map((flat, flateIndex) => ({
+              ?.map((flat, flateIndex) => ({
                 ...flat,
-                flateIndex, // ✅ preserve flat index
+                flateIndex,
                 areas: flat.areas
-                  .map((area, areaIndex) => ({
-                    ...area,
-                    areaIndex,
-                    lineItems: area.lineItems
-                      .map((li, lineIndex) => ({ ...li, lineIndex }))
-                      .filter((li) =>
-                        li.name.toLowerCase().includes(lineItem.toLowerCase())
-                      ),
-                  }))
-                  .filter((a) => a.lineItems.length > 0),
+                  ?.map((area, areaIndex) => {
+                    const filteredLineItems = filterLineItems(area.lineItems);
+                    return {
+                      ...area,
+                      areaIndex,
+                      lineItems: filteredLineItems,
+                    };
+                  })
+                  .filter((area) => area.lineItems.length > 0),
               }))
-              .filter((f) => f.areas.length > 0),
+              .filter((flat) => flat.areas.length > 0),
           }))
-          .filter((f: any) => f.flats.length > 0),
+          .filter((floor: FloorItem) => floor.flats.length > 0),
       };
     } else {
       return {
         ...tabRecord,
         areas: tabRecord.areas
-          ?.map((area: AreaItem, areaIndex: number) => ({
-            ...area,
-            areaIndex,
-            lineItems: area.lineItems
-              .map((li, lineIndex) => ({ ...li, lineIndex }))
-              .filter((li) =>
-                li.name.toLowerCase().includes(lineItem.toLowerCase())
-              ),
-          }))
-          .filter((a: any) => a.lineItems.length > 0),
+          ?.map((area: AreaItem, areaIndex: number) => {
+            const filteredLineItems = filterLineItems(area.lineItems);
+            return {
+              ...area,
+              areaIndex,
+              lineItems: filteredLineItems,
+            };
+          })
+          .filter((area: AreaItem) => area.lineItems.length > 0),
       };
     }
   }, [filter, tabRecord, currentTab]);
 
   const getInitial = () => {
-    dispatch(setTab("typical"));
-    // fetch Api to get initial value
-    const initialValue = {
-      project: {
-        id: "proj_001",
-        name: "Residential Tower A - Mumbai",
-        location: "Bandra West, Mumbai, Maharashtra",
-        startDate: "2024-01-15",
-        expectedCompletionDate: "2025-12-31",
-        status: "IN_PROGRESS",
-      },
-      workOrder: {
-        id: "WO-002",
-        title: "Interior Finishing",
-        description: "Complete interior finishing work for residential units",
-        startDate: "2024-06-01",
-        targetDate: "2024-12-31",
-        supervisor: {
-          id: "sup_001",
-          name: "Rajesh Kumar",
-          phone: "+91-9876543210",
-          email: "rajesh.kumar@construction.com",
-        },
-      },
-      progressSummary: {
-        overallProgress: 0,
-        lastUpdated: "2025-01-03T14:45:00Z",
-        totalLineItems: 10,
-        completedLineItems: 0,
-        pendingLineItems: 10,
-        inProgressLineItems: 0,
-      },
-      areas: {
-        typical: {
-          name: "Typical Areas",
-          description: "Standard residential unit areas",
-          progress: 0,
-          floors: [
-            {
-              id: "floor1",
-              name: "Floor 1",
-              progress: 0,
-              isCompleted: false,
-              collapse: true,
-              flats: [
-                {
-                  id: "flat101",
-                  name: "Flat 101",
-                  progress: 0,
-                  isCompleted: false,
-                  collapse: false,
-                  areas: [
-                    {
-                      id: "commontoilet101",
-                      name: "Common Toilet",
-                      progress: 0,
-                      isCompleted: false,
-                      collapse: false,
-                      lineItems: [
-                        {
-                          id: "li_001",
-                          name: "Tile Installation",
-                          category: "tile",
-                          plannedQuantity: {
-                            value: 25,
-                            unit: "sqft",
-                          },
-                          status: "PENDING",
-                          isCompleted: false,
-                          remarks: "",
-                          completedDate: "2025-01-02T10:30:00Z",
-                          assignedTo: "Tile Team A",
-                        },
-                        {
-                          id: "li_002",
-                          name: "Plumbing Fixtures",
-                          category: "plumbing",
-                          plannedQuantity: {
-                            value: 3,
-                            unit: "units",
-                          },
-                          status: "PENDING",
-                          isCompleted: false,
-                          collapse: false,
-                          remarks: "",
-                          estimatedStartDate: "2025-01-05T09:00:00Z",
-                          assignedTo: "Plumbing Team B",
-                        },
-                      ],
-                    },
-                    {
-                      id: "mastertoilet101",
-                      name: "Master Toilet",
-                      progress: 0,
-                      isCompleted: false,
-                      collapse: false,
-                      lineItems: [
-                        {
-                          id: "li_003",
-                          name: "Tile Installation",
-                          category: "tile",
-                          plannedQuantity: {
-                            value: 30,
-                            unit: "sqft",
-                          },
-                          status: "IN_PROGRESS",
-                          isCompleted: false,
-                          remarks: "",
-                          startedDate: "2024-12-30T08:00:00Z",
-                          assignedTo: "Tile Team A",
-                        },
-                        {
-                          id: "li_004",
-                          name: "Electrical Fixtures",
-                          category: "electrical",
-                          plannedQuantity: {
-                            value: 5,
-                            unit: "points",
-                          },
-                          status: "PENDING",
-                          isCompleted: false,
-                          collapse: false,
-                          remarks: "",
-                          estimatedStartDate: "2025-01-08T09:00:00Z",
-                          assignedTo: "Electrical Team C",
-                        },
-                      ],
-                    },
-                  ],
-                },
-                {
-                  id: "flat102",
-                  name: "Flat 102",
-                  progress: 0,
-                  isCompleted: false,
-                  collapse: false,
-                  areas: [
-                    {
-                      id: "kitchen102",
-                      name: "Kitchen",
-                      progress: 0,
-                      isCompleted: false,
-                      collapse: false,
-                      lineItems: [
-                        {
-                          id: "li_005",
-                          name: "Cabinet Installation",
-                          category: "cabinet",
-                          plannedQuantity: {
-                            value: 8,
-                            unit: "units",
-                          },
-                          status: "PENDING",
-                          isCompleted: false,
-                          collapse: false,
-                          remarks: "",
-                          estimatedStartDate: "2025-01-10T09:00:00Z",
-                          assignedTo: "Carpentry Team A",
-                        },
-                        {
-                          id: "li_006",
-                          name: "Countertop Installation",
-                          category: "countertop",
-                          plannedQuantity: {
-                            value: 12,
-                            unit: "sqft",
-                          },
-                          status: "PENDING",
-                          isCompleted: false,
-                          collapse: false,
-                          remarks: "",
-                          estimatedStartDate: "2025-01-15T09:00:00Z",
-                          assignedTo: "Stone Team B",
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              id: "floor2",
-              name: "Floor 2",
-              progress: 0,
-              isCompleted: false,
-              collapse: false,
-              flats: [
-                {
-                  id: "flat201",
-                  name: "Flat 201",
-                  progress: 0,
-                  isCompleted: false,
-                  collapse: false,
-                  areas: [
-                    {
-                      id: "livingroom201",
-                      name: "Living Room",
-                      progress: 0,
-                      isCompleted: false,
-                      collapse: false,
-                      lineItems: [
-                        {
-                          id: "li_007",
-                          name: "Painting Work",
-                          category: "painting",
-                          plannedQuantity: {
-                            value: 400,
-                            unit: "sqft",
-                          },
-                          status: "PENDING",
-                          isCompleted: false,
-                          collapse: false,
-                          remarks: "",
-                          estimatedStartDate: "2025-01-20T09:00:00Z",
-                          assignedTo: "Painting Team A",
-                        },
-                        {
-                          id: "li_008",
-                          name: "Flooring Work",
-                          category: "flooring",
-                          plannedQuantity: {
-                            value: 200,
-                            unit: "sqft",
-                          },
-                          status: "PENDING",
-                          isCompleted: false,
-                          collapse: false,
-                          remarks: "",
-                          estimatedStartDate: "2025-01-25T09:00:00Z",
-                          assignedTo: "Flooring Team B",
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        with_qty: {
-          name: "With Qty",
-          description: "Standard residential unit areas",
-          progress: 0,
-          areas: [
-            {
-              id: "kitchen102",
-              name: "Kitchen",
-              progress: 0,
-              isCompleted: false,
-              collapse: false,
-              lineItems: [
-                {
-                  id: "li_005",
-                  name: "Cabinet Installation",
-                  category: "cabinet",
-                  plannedQuantity: {
-                    value: 8,
-                    unit: "units",
-                  },
-                  status: "PENDING",
-                  isCompleted: false,
-                  collapse: false,
-                  remarks: "",
-                  estimatedStartDate: "2025-01-10T09:00:00Z",
-                  assignedTo: "Carpentry Team A",
-                },
-                {
-                  id: "li_006",
-                  name: "Countertop Installation",
-                  category: "countertop",
-                  plannedQuantity: {
-                    value: 12,
-                    unit: "sqft",
-                  },
-                  status: "PENDING",
-                  isCompleted: false,
-                  collapse: false,
-                  remarks: "",
-                  estimatedStartDate: "2025-01-15T09:00:00Z",
-                  assignedTo: "Stone Team B",
-                },
-              ],
-            },
-          ],
-        },
-        without_qty: {
-          name: "Without Qty",
-          description: "Standard residential unit areas",
-          progress: 0,
-          areas: [
-            {
-              id: "kitchen102",
-              name: "Kitchen",
-              progress: 0,
-              isCompleted: false,
-              collapse: false,
-              lineItems: [
-                {
-                  id: "li_005",
-                  name: "Cabinet Installation",
-                  category: "cabinet",
-                  plannedQuantity: {
-                    value: 8,
-                    unit: "units",
-                  },
-                  addQuantity: {
-                    value: 0,
-                    unit: "sqft",
-                  },
-                  status: "PENDING",
-                  isCompleted: false,
-                  collapse: false,
-                  remarks: "",
-                  estimatedStartDate: "2025-01-10T09:00:00Z",
-                  assignedTo: "Carpentry Team A",
-                },
-                {
-                  id: "li_006",
-                  name: "Countertop Installation",
-                  category: "countertop",
-                  plannedQuantity: {
-                    value: 12,
-                    unit: "sqft",
-                  },
-                  addQuantity: {
-                    value: 0,
-                    unit: "sqft",
-                  },
-                  status: "PENDING",
-                  isCompleted: false,
-                  collapse: false,
-                  remarks: "",
-                  estimatedStartDate: "2025-01-15T09:00:00Z",
-                  assignedTo: "Stone Team B",
-                },
-              ],
-            },
-          ],
-        },
-      },
-    };
+    // Get API to get Initial Value
+
+    //In this case, Getting initial value directly from the file
 
     // setting dashboard
     let workOrder: string =
@@ -527,19 +196,29 @@ function App() {
     mainRecord.current = initialValue;
 
     // setting filter
-    let listItems: LineItem[] = getLineItems();
-    let filt: FilterItem = filter;
-    for (let i = 0; i < listItems.length; i++) {
-      const name = listItems[i].name;
-      let obj = { label: name, value: name };
-      filt.lineItemFilter.choice.push(obj);
-    }
-    setFilter({ ...filt });
+    setLineFilterChoices("typical");
+    dispatch(setTab("typical"));
     setTabRecord({ ...initialValue.areas.typical });
   };
 
-  const getLineItems = (): LineItem[] => {
-    switch (currentTab) {
+  const setLineFilterChoices = (tab: string): void => {
+    let listItems: LineItem[] = getLineItems(tab);
+    let filt: FilterItem = structuredClone(initialFilter.current);
+    const seen = new Set<string>();
+
+    for (let i = 0; i < listItems.length; i++) {
+      const name = listItems[i].name;
+      if (!seen.has(name)) {
+        seen.add(name);
+        let obj = { label: name, value: name };
+        filt.lineItemFilter.choice.push(obj);
+      }
+    }
+    setFilter(filt);
+  };
+
+  const getLineItems = (tab: string): LineItem[] => {
+    switch (tab) {
       case "typical":
         return (
           mainRecord.current.areas.typical?.floors?.flatMap(
@@ -593,43 +272,36 @@ function App() {
       case "typical":
         // updateAllProgress();
         dispatch(setTab("typical"));
+        setLineFilterChoices("typical");
         setTabRecord({ ...mainRecord.current.areas.typical });
         break;
       case "with_qty":
         // updateAllProgress();
         dispatch(setTab("with_qty"));
+        setLineFilterChoices("with_qty");
         setTabRecord({ ...mainRecord.current.areas.with_qty });
         break;
       case "without_qty":
         // updateAllProgress();
         dispatch(setTab("without_qty"));
+        setLineFilterChoices("without_qty");
         setTabRecord({ ...mainRecord.current.areas.without_qty });
         break;
 
       default:
         dispatch(setTab("typical"));
+        setLineFilterChoices("typical");
         setTabRecord({ ...mainRecord.current.areas.typical });
         break;
     }
   };
 
-  // val: string|boolean|number,
-  // area: "FLOOR" | "FLAT" | "AREA",
-  // isCheckChange: boolean,
-  // isCollapseChange: boolean,
-  // floorIndex?: number,
-  // flateIndex?: number,
-  // areaIndex?: number
-
   const formChange = useCallback(
     (obj: FormChangeItem) => {
-      console.log(obj);
-
       let updatedRecord = structuredClone(tabRecord);
       if (currentTab === "typical") {
         if (obj.area === "FLOOR" && obj.floorIndex !== undefined) {
           updatedRecord.floors[obj.floorIndex][obj.field] = obj.value;
-          console.log("updatedRecord", updatedRecord);
         } else if (
           obj.area === "FLAT" &&
           obj.floorIndex !== undefined &&
@@ -1059,22 +731,79 @@ function App() {
     setDbRecord({ ...db });
   };
 
-  // type[line(lineItemFilter),status(statusFilter),quick(quickAction)]
   const filterChange = (value: string, type: string): void => {
+    // Quick Action Functions
+    const reset = (): void => {
+      setLineFilterChoices(currentTab);
+      toast.info("Filter Reset", { position: "top-right" });
+    };
+
+    const expand = (): void => {
+      const updated = structuredClone(tabRecord);
+      if (currentTab === "typical") {
+        updated.floors.forEach((floor: FloorItem) => {
+          floor.collapse = true;
+          floor.flats.forEach((flat) => {
+            flat.collapse = true;
+            flat.areas.forEach((area) => {
+              area.collapse = true;
+            });
+          });
+        });
+      } else {
+        updated.areas.forEach((area: AreaItem) => {
+          area.collapse = true;
+        });
+      }
+
+      setTabRecord(updated);
+      toast.info("All Sections Expanded", { position: "top-right" });
+    };
+
+    const collapse = (): void => {
+      const updated = structuredClone(tabRecord);
+      if (currentTab === "typical") {
+        updated.floors.forEach((floor: FloorItem) => {
+          floor.collapse = false;
+          floor.flats.forEach((flat) => {
+            flat.collapse = false;
+            flat.areas.forEach((area) => {
+              area.collapse = false;
+            });
+          });
+        });
+      } else {
+        updated.areas.forEach((area: AreaItem) => {
+          area.collapse = true;
+        });
+      }
+
+      setTabRecord(updated);
+      toast.info("All Sections Collapsed", { position: "top-right" });
+    };
+
     if (type === "line") {
       let filt = filter;
       filt.lineItemFilter.value = value;
       setFilter({ ...filt });
     }
 
+    if (type === "status") {
+      let filt = filter;
+      filt.statusFilter.value = value;
+      setFilter({ ...filt });
+    }
+
     if (type === "quick") {
       switch (value) {
         case "reset":
-          setFilter(structuredClone(initialFilter.current));
+          reset();
           break;
         case "expand":
+          expand();
           break;
         case "collapse":
+          collapse();
           break;
 
         default:
@@ -1096,9 +825,22 @@ function App() {
       with_qty: mainRecord.current?.areas?.with_qty,
       without_qty: mainRecord.current?.areas?.without_qty,
     };
-    console.log(postBody);
-    toast.success("Saved Progress", { position: "top-right" });
     // POST API Call With postBody
+
+    // Here i am simply triggering Download (you can avoid if you are calling POST API)
+
+    // Convert JSON to string
+    const jsonStr = JSON.stringify(postBody, null, 2);
+
+    // Create a blob and trigger download
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "POST-JSON.json";
+    a.click();
+    toast.success("Saved Progress", { position: "top-right" });
   };
 
   useEffect(() => {
@@ -1121,7 +863,7 @@ function App() {
             formChange={formChange}
             tabRecod={searchTabRecord}
           />
-          <div className="flex flex-row w-full justify-start align-baseline">
+          {((currentTab === "typical" && searchTabRecord?.floors?.length>0 )|| (currentTab !== "typical" && searchTabRecord?.areas?.length>0) )?<div className="flex flex-row w-full justify-start align-baseline">
             <Button
               variant={"default"}
               className="me-2"
@@ -1140,7 +882,7 @@ function App() {
             >
               Reset Tabs
             </Button>
-          </div>
+          </div>:<Label className="my-2">No Record Found...</Label>}
         </div>
       </div>
     </div>
